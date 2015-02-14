@@ -32,9 +32,36 @@ To do:
 
 
 class SeqToolkit(object):
+    """Sequence manipulation and statistics."""
+
     def __init__(self):
         """Initialization."""
-        pass
+        self.complements = string.maketrans('acgtrymkbdhvACGTRYMKBDHV', 'tgcayrkmvhdbTGCAYRKMVHDB')
+
+    def count_nt(self, seq):
+        """Count occurences of each nucleotide in a sequence.
+
+        Only the bases A, C, G, and T(U) are counted. Ambiguous
+        bases are ignored.
+
+        Parameters
+        ----------
+        seq : str
+            Nucleotide sequence.
+
+        Returns
+        -------
+        list
+            Number of A, C, G, and T(U) in sequence.
+        """
+
+        s = seq.upper()
+        a = s.count('A')
+        c = s.count('C')
+        g = s.count('G')
+        t = s.count('T') + s.count('U')
+
+        return a, c, g, t
 
     def gc(self, seq):
         """Calculate GC content of a sequence.
@@ -56,12 +83,7 @@ class SeqToolkit(object):
             GC content of sequence.
         """
 
-        s = seq.upper()
-        a = s.count('A')
-        c = s.count('C')
-        g = s.count('G')
-        t = s.count('T') + s.count('U')
-
+        a, c, g, t = self.count_nt(seq)
         return float(g + c) / (a + c + g + t)
 
     def ambiguous_nucleotides(self, seq):
@@ -81,13 +103,12 @@ class SeqToolkit(object):
             Number of ambiguous and degenerate bases.
         """
 
-        s = seq.upper()
-        a = s.count('A')
-        c = s.count('C')
-        g = s.count('G')
-        t = s.count('T') + s.count('U')
-
+        a, c, g, t = self.count_nt(seq)
         return len(seq) - (a + c + g + t)
+
+    def rev_comp(self, seq):
+        """Rverse complement a sequence."""
+        return seq.translate(self.complements)[::-1]
 
     def N50(self, seqs):
         """Calculate N50 for a set of sequences.

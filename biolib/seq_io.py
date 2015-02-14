@@ -27,6 +27,12 @@ import gzip
 
 
 class SeqIO(object):
+    """Read and write sequence files.
+
+    Support is provided for reading and writing
+    fasta file with or without gzip compression.
+    """
+
     def __init__(self):
         """Initialization."""
         pass
@@ -157,6 +163,9 @@ class SeqIO(object):
 
     def write_fasta(self, seqs, output_file):
         """Write sequences to fasta file.
+
+        If the output file has the extension 'gz',
+        it will be compressed using gzip.
 
         Parameters
         ----------
