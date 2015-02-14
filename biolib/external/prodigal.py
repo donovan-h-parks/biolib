@@ -62,12 +62,12 @@ class Prodigal(object):
         self.output_dir = output_dir
 
     def _check_for_prodigal(self):
-        """Check to see if Prodigal is on the system before we try to run it."""
+        """Check to see if Prodigal is on the system path."""
         try:
             subprocess.call(['prodigal', '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
         except:
-            self.logger.info("  Make sure prodigal is on your system path.")
-            sys.exit()
+            self.logger.info("[Error] Make sure prodigal is on your system path.")
+            sys.exit(-1)
 
     def _producer(self, genome_file):
         """Apply prodigal to genome with most suitable translation table.

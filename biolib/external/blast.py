@@ -28,17 +28,43 @@ import sys
 import logging
 import subprocess
 
+"""
+To do:
+ - this should be extended to handle blastn and some of the variants
+ - this class and the diamond class should mirror each other
+   to the extent possible
+"""
 
-class BlastRunner():
+class Blast():
     """Wrapper for running blast."""
 
-    def __init__(self):
-        """Initialization."""
+    def __init__(self, cpus):
+        """Initialization.
+
+        Parameters
+        ----------
+        cpus : int
+            Number of cpus to use.
+        """
+
         self.logger = logging.getLogger()
 
         self._check_for_blast()
 
-    def blastp(self, query_seqs, prot_db, evalue, cpus, output_file):
+        self.cpus = cpus
+
+    def _check_for_blast(self):
+        """Check to see if blastp is on the system path."""
+
+        # Assume that a successful blast -help returns 0 and anything
+        # else returns non-zero
+        try:
+            subprocess.call(['blastp', '-help'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
+        except:
+            self.logger.error("[Error] Make sure blastp is on your system path.")
+            sys.exit(-1)
+
+    def blastp(self, query_seqs, prot_db, evalue, output_file):
         """Apply blastp to query file.
 
         Finds homologs to query sequences using blastp homology search
@@ -52,38 +78,24 @@ class BlastRunner():
             File containing blastp formatted database.
         evalue : float
             E-value threshold used to identify homologs.
-        cpus : int
-            Number of cpus to use during homology search.
         output_file : str
             Output file containing blastp results.
         """
 
-        cmd = "blastp -num_threads %d" % cpus
+        cmd = "blastp -num_threads %d" % self.cpus
         cmd += " -query %s -db %s -out %s -evalue %g" % (query_seqs, prot_db, output_file, evalue)
         cmd += " -outfmt '6 qseqid qlen sseqid slen length pident evalue bitscore'"
         os.system(cmd)
 
-    def _check_for_blast(self):
-        """Check to see if blastp is on the system before we try to run it."""
-
-        # Assume that a successful blast -help returns 0 and anything
-        # else returns non-zero
-        try:
-            subprocess.call(['blastp', '-help'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
-        except:
-            self.logger.error("  [Error] Make sure blastp is on your system path.")
-            sys.exit()
-
-
 class BlastParser():
-    """Parses output files produced with BlastRunner."""
+    """Parses output files produced with Blast."""
 
     def __init__(self):
         """Initialization."""
         pass
 
     def identify_homologs(self, blast_table, evalue_threshold, per_identity_threshold, per_aln_len_threshold):
-        """Identify homologs among  blast hits.
+        """Identify homologs among blast hits.
 
         Identifies hits satisfying the criteria required for a
         gene to be considered a homolog.

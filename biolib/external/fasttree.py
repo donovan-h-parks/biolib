@@ -28,7 +28,7 @@ __email__ = "donovan.parks@gmail.com"
 __status__ = "Development"
 
 
-class FastTreeRunner():
+class FastTree():
     """Wrapper for running FastTree."""
 
     def __init__(self, multithreaded=True):
@@ -38,39 +38,6 @@ class FastTreeRunner():
         self._check_for_fasttree()
 
         self.multithreaded = multithreaded
-
-    def run(self, msa_file, model_str, output_tree, output_tree_log, log_file=None):
-        """Infer tree using FastTree.
-
-        Parameters
-        ----------
-        msa_file : str
-            Fasta file containing multiple sequence alignment.
-        model_str : str
-            Specified either the 'wag' or 'jtt' model.
-        output_tree: str
-            Output file containing inferred tree.
-        output_tree_log: str
-            Output file containing information about inferred tree.
-        output_log: str
-            Output file containing information about running of FastTree.
-        """
-
-        if model_str.upper() == 'JTT':
-            model_str = ''
-        elif model_str.upper() == 'WAG':
-            model_str = '-wag'
-
-        if not log_file:
-            log_file = '/dev/null'
-
-        cmd = '-quiet -nosupport -gamma %s -log %s %s > %s 2> %s' % (model_str, output_tree_log, msa_file, output_tree, log_file)
-        if self.multithreaded:
-            cmd = 'FastTreeMP ' + cmd
-            os.system(cmd)
-        else:
-            cmd = 'FastTree ' + cmd
-            os.system(cmd)
 
     def _check_for_fasttree(self):
         """Check to see if FastTree is on the system path."""
@@ -82,5 +49,50 @@ class FastTreeRunner():
             raise
 
         if exit_status != 0:
-            print "[Error] FastTree is not on the system path."
-            sys.exit()
+            self.logger.error("[Error] FastTree is not on the system path.")
+            sys.exit(-1)
+
+    def run(self, msa_file, seq_type, model_str, output_tree, output_tree_log, log_file=None):
+        """Infer tree using FastTree.
+
+        Parameters
+        ----------
+        msa_file : str
+            Fasta file containing multiple sequence alignment.
+        seq_type : str
+            Specifies multiple sequences alignment is of 'nt' or 'prot'.
+        model_str : str
+            Specified either the 'wag' or 'jtt' model.
+        output_tree: str
+            Output file containing inferred tree.
+        output_tree_log: str
+            Output file containing information about inferred tree.
+        output_log: str
+            Output file containing information about running of FastTree.
+        """
+
+        if seq_type.upper() == 'PROT':
+            seq_type_str = ''
+        elif seq_type.upper() == 'NT':
+            seq_type_str = '-nt'
+
+        if model_str.upper() == 'JTT':
+            model_str = ''
+        elif model_str.upper() == 'WAG':
+            model_str = '-wag'
+
+        if not log_file:
+            log_file = '/dev/null'
+
+        cmd = '-quiet -nosupport -gamma %s %s -log %s %s > %s 2> %s' % (seq_type_str, 
+                                                                        model_str, 
+                                                                        output_tree_log, 
+                                                                        msa_file, 
+                                                                        output_tree, 
+                                                                        log_file)
+        if self.multithreaded:
+            cmd = 'FastTreeMP ' + cmd
+            os.system(cmd)
+        else:
+            cmd = 'FastTree ' + cmd
+            os.system(cmd)

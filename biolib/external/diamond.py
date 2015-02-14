@@ -28,6 +28,11 @@ import subprocess
 import logging
 from collections import namedtuple
 
+"""
+To do:
+ - this class and the blast class should mirror each other
+   to the extent possible
+"""
 
 class Diamond(object):
     """Wrapper for running diamond."""
@@ -46,30 +51,13 @@ class Diamond(object):
 
         self.cpus = cpus
 
-    def homology_criteria(self, evalue, per_identity, max_target_seqs=1):
-        """Criteria to use in homology search.
-
-        Parameters
-        ----------
-        evalue : float
-            E-value threshold used by blast.
-        per_identity : float
-            Percent identity threshold used by blast.
-        max_target_seqs : int
-            Maximum number of hits to report per sequence.
-        """
-
-        self.evalue = evalue
-        self.per_identity = per_identity
-        self.max_target_seqs = max_target_seqs
-
     def _check_for_diamond(self):
-        """Check to see if BLAST is on the system before we try to run it."""
+        """Check to see if BLAST is on the system path."""
         try:
             subprocess.call(['diamond', '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
         except:
-            self.logger.error("  Make sure diamond is on your system path.")
-            sys.exit()
+            self.logger.error("[Error] Make sure diamond is on your system path.")
+            sys.exit(-1)
 
     def read_blast_table(self, table):
         """Generator function to read hits from a blast output table.
@@ -118,7 +106,7 @@ class Diamond(object):
 
             yield hit
 
-    def blastx(self, nt_file, db_file, output_file):
+    def blastx(self, nt_file, db_file, evalue, per_identity, max_target_seqs, output_file):
         """Apply diamond blastx to a set of nucleotide sequences.
 
         Parameters
@@ -126,7 +114,13 @@ class Diamond(object):
         nt_file : str
             Fasta file with nucleotide sequences.
         db_file : str
-            Diamond database.
+            Diamond database of protein sequeces.
+        evalue : float
+            E-value threshold used by blast.
+        per_identity : float
+            Percent identity threshold used by blast.
+        max_target_seqs : int
+            Maximum number of hits to report per sequence.
         output_file : str
             File to store hits identified by diamond.
         """
@@ -134,13 +128,12 @@ class Diamond(object):
         if db_file.endswith('.dmnd'):
             db_file = db_file[0:db_file.rfind('.dmnd')]
 
-        self.logger.info('  Running diamond blastx with %d processes (be patient!)' % self.cpus)
         os.system('diamond blastx --compress 0 -p %d -q %s -d %s -e %f --id %f -k %d -o %s' % (self.cpus,
                                                                             nt_file,
                                                                             db_file,
-                                                                            self.evalue,
-                                                                            self.per_identity,
-                                                                            self.max_target_seqs,
+                                                                            evalue,
+                                                                            per_identity,
+                                                                            max_target_seqs,
                                                                             output_file))
 
 

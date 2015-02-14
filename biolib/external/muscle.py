@@ -29,10 +29,6 @@ import logging
 import subprocess
 
 
-class MuscleError(BaseException):
-    pass
-
-
 class MuscleRunner():
     """Wrapper for running muscle."""
 
@@ -41,14 +37,23 @@ class MuscleRunner():
         self.logger = logging.getLogger()
 
         self._check_for_muscle()
+        
+    def _check_for_muscle(self):
+        """Check to see if muscle is on the system path"""
+
+        try:
+            subprocess.call(['muscle', '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
+        except:
+            self.logger.error("[Error] Make sure muscle is on your system path.")
+            sys.exit(-1)
 
     def run(self, seqs, output_file, log_file):
         """Apply muscle to query sequences.
 
         Parameters
         ----------
-        seqs : dict[seq_id] -> seq
-            Sequence to alignment.
+        seqs : str
+            Fasta file with sequence to alignment.
         output_file: str
             Output file containing multiple sequence alignment.
         log_file: str
@@ -58,13 +63,3 @@ class MuscleRunner():
         cmd = 'muscle -quiet -in %s -out %s -log %s' % (seqs, output_file, log_file)
         os.system(cmd)
 
-    def _check_for_muscle(self):
-        """Check to see if muscle is on the system before we try to run it."""
-
-        # Assume that a successful blast -help returns 0 and anything
-        # else returns non-zero
-        try:
-            subprocess.call(['muscle', '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
-        except:
-            self.logger.error("  [Error] Make sure muscle is on your system path.")
-            sys.exit()

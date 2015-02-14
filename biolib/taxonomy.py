@@ -27,7 +27,9 @@ class Taxonomy(object):
 
     This class currently assumes a Greengenes-style taxonomy
     string with the following 7 taxonomic ranks:
-      d__; c__; o__; f__; g__; s__S
+      d__; c__; o__; f__; g__; s__
+      
+    Spaces after the semi-colons are optional.
     """
 
     def __init__(self):
@@ -35,3 +37,48 @@ class Taxonomy(object):
         self.rank_prefixes = ['d__', 'p__', 'c__', 'o__', 'f__', 'g__', 's__']
         self.rank_labels = ['domain', 'phylum', 'class', 'order', 'family', 'genus', 'species']
         self.rank_index = {'d__': 0, 'p__': 1, 'c__': 2, 'o__': 3, 'f__': 4, 'g__': 5, 's__': 6]}
+        
+    def split(self, taxa_str):
+        """Split taxonomy string into ranks.
+        
+        Parameters
+        ----------
+        taxa_str : str
+            Greengenes-style taxonomy string.
+        
+        Returns
+        -------
+        dict
+            Taxon at each taxonomic rank.
+        """
+        
+        taxa = [x.strip() for x in taxa_str.split(';')]
+        
+        d = {}
+        for rank, taxon in enumerate(taxa):
+            d[self.rank_labels[i]] = taxon
+            
+    def check_full(self, taxa_str):
+        """Check if taxonomy string specifies all expected ranks.
+        
+        Parameters
+        ----------
+        taxa_str : str
+            Greengenes-style taxonomy string.
+        
+        Returns
+        -------
+        boolean
+            True if string contains all expected ranks, else False.
+        """
+        
+        taxa = [x.strip() for x in taxa_str.split(';')]
+        if len(taxa) != len(self.rank_prefixes):
+            return False
+            
+        for rank, taxon in taxa:
+            if taxon[0:3] != self.rank_prefixes[rank]:
+                return False
+                
+        return True
+        
