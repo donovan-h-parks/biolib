@@ -11,7 +11,7 @@ The simplest way to install this package is through pip:
 
 ## Cite
 
-If you find this package useful, please cite this git repository (https://github.com/dparks1134/biolib)
+If you find this package useful, please cite this git repository https://github.com/dparks1134/biolib.
 
 ## Copyright
 
