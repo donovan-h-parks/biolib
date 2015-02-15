@@ -86,7 +86,7 @@ def remove_extension(filename, extension=None):
     """
     f = ntpath.basename(filename)
 
-    if extension:
+    if extension and f.endswith(extension):
         f = f[0:f.rfind(extension)]
     else:
         f = os.path.splitext(f)[0]
