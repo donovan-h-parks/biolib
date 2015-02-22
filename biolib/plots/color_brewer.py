@@ -2,11 +2,7 @@
 #                                                                             #
 #    color_brewer.py                                                          #
 #                                                                             #
-#    Easy access to the colorbrewer2.org color maps                           #
-#                                                                             #
-#    from cb2cols import Cb2Cols as CB2                                       #
-#    cb2 = CB2()                                                              #
-#    cb2.demo()                                                               #
+#    Easy access to the colorbrewer2.org color maps.                          #
 #                                                                             #
 #    Copyright (C) Michael Imelfort                                           #
 #                                                                             #
