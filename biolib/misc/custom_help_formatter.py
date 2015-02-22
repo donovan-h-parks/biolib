@@ -17,7 +17,7 @@
 
 __author__ = 'Donovan Parks'
 __copyright__ = 'Copyright 2014'
-__credits__ = ['Donovan Parks']
+__credits__ = ['Donovan Parks', 'Connor Skennerton']
 __license__ = 'GPL3'
 __maintainer__ = 'Donovan Parks'
 __email__ = 'donovan.parks@gmail.com'
