@@ -30,8 +30,10 @@ To do:
 *****************************************************************************
 """
 
+import string
 
-class SeqToolkit(object):
+
+class SeqTk(object):
     """Sequence manipulation and statistics."""
 
     def __init__(self):

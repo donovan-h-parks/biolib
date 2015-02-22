@@ -67,7 +67,8 @@ class Parallel(object):
                 parallel = Parallel(cpus = 2)
                 consumer_data = parallel.run(self._producer,
                                                 self._consumer,
-                                                data_items = [1, 2, 3, 4, 5])
+                                                data_items = [1, 2, 3, 4, 5],
+                                                self.progress)
 
                 print consumer_data
     """

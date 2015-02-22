@@ -25,13 +25,12 @@ __email__ = 'donovan.parks@gmail.com'
 import os
 import sys
 import subprocess
-import ntpath
 import logging
 import tempfile
 import shutil
 
-from biolib.common import check_file_exists
-from biolib.seq_io import SeqIO
+from biolib.common import check_file_exists, remove_extension
+from biolib.seq_io import read_fasta
 from biolib.parallel import Parallel
 
 import numpy as np
@@ -40,17 +39,15 @@ import numpy as np
 class Prodigal(object):
     """Wrapper for running Prodigal in parallel."""
 
-    def __init__(self, cpus, called_genes, output_dir):
+    def __init__(self, cpus, verbose=True):
         """Initialization.
 
         Parameters
         ----------
         cpus : int
             Number of cpus to use.
-        called_genes : boolean
-            Flag indicating genes are already called.
-        output_dir : str
-            Directory to store called genes.
+        verbose : boolean
+            Flag indicating if progress should be reported.
         """
 
         self.logger = logging.getLogger()
@@ -58,8 +55,7 @@ class Prodigal(object):
         self._check_for_prodigal()
 
         self.cpus = cpus
-        self.called_genes = called_genes
-        self.output_dir = output_dir
+        self.verbose = verbose
 
     def _check_for_prodigal(self):
         """Check to see if Prodigal is on the system path."""
@@ -78,20 +74,18 @@ class Prodigal(object):
             Fasta file for genome.
         """
 
-        genome_id = ntpath.basename(genome_file)
-        genome_id = genome_id[0:genome_id.rfind('.')]
+        genome_id = remove_extension(genome_file)
 
         aa_gene_file = os.path.join(self.output_dir, genome_id + '.genes.faa')
         nt_gene_file = os.path.join(self.output_dir, genome_id + '.genes.fna')
         gff_file = os.path.join(self.output_dir, genome_id + '.gff')
 
         if self.called_genes:
-            os.system('ln -s %s %s' % (os.path.abspath(genome_file), aa_gene_file))
+            os.system('cp %s %s' % (os.path.abspath(genome_file), aa_gene_file))
         else:
             tmp_dir = tempfile.mkdtemp()
 
-            seqIO = SeqIO()
-            seqs = seqIO.read_fasta(genome_file)
+            seqs = read_fasta(genome_file)
 
             # determine number of bases
             total_bases = 0
@@ -162,19 +156,35 @@ class Prodigal(object):
 
         return '    Finished processing %d of %d (%.2f%%) genomes.' % (processed_items, total_items, float(processed_items) * 100 / total_items)
 
-    def run(self, genome_files):
+    def run(self, genome_files, called_genes, output_dir):
         """Call genes with Prodigal.
+
+        Call genes with prodigal and store the results in the
+        specified output directory. For convenience, the
+        called_gene flag can be used to indicate genes have
+        previously been called and simply need to be copied
+        to the specified output directory.
 
         Parameters
         ----------
         genome_files : list of str
             Nucleotide fasta files to call genes on.
+        called_genes : boolean
+            Flag indicating genes are already called.
+        output_dir : str
+            Directory to store called genes.
         """
 
-        self.logger.info('  Identifying genes within genomes:')
+        self.called_genes = called_genes
+        self.output_dir = output_dir
+
+        progress_func = None
+        if self.verbose:
+            self.logger.info('  Identifying genes within genomes:')
+            progress_func = self._progress
 
         parallel = Parallel(self.cpus)
-        parallel.run(self._producer, None, genome_files, self._progress)
+        parallel.run(self._producer, None, genome_files, progress_func)
 
 
 class ProdigalGeneFeatureParser():

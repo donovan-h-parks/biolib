@@ -28,10 +28,60 @@ import sys
 import logging
 import ntpath
 import re
+import gzip
+
+
+def is_float(s):
+    """Check if a string can be converted to a float.
+
+    Parameters
+    ----------
+    s : str
+        String to evaluate.
+
+    Returns
+    -------
+    boolean
+        True if string can be converted, else False.
+    """
+
+    try:
+        float(s)
+    except ValueError:
+        return False
+
+    return True
+
+
+def concatenate_files(input_files, output_file):
+    """Concatenate several files into a single file.
+
+    http://stackoverflow.com/questions/2669059/how-to-sort-alpha-numeric-set-in-python
+
+    Creates a compressed file if the extension of
+    the output file ends with .gz.
+
+    Parameters
+    ----------
+    input_files : iterable
+        Files to concatenate.
+    output_file : str
+        Name of output file.
+    """
+
+    if output_file.endswith('.gz'):
+        open_file = gzip.open
+    else:
+        open_file = open
+
+    with open_file(output_file, "wb") as outfile:
+        for f in input_files:
+            with open(f, "rb") as infile:
+                outfile.write(infile.read())
 
 
 def alphanumeric_sort(l):
-    """ Sorts the given iterable alphanumerically.
+    """Sorts the given iterable alphanumerically.
 
     http://stackoverflow.com/questions/2669059/how-to-sort-alpha-numeric-set-in-python
 

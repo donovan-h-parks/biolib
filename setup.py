@@ -12,7 +12,7 @@ setup(
     version=version(),
     author='Donovan Parks',
     author_email='donovan.parks@gmail.com',
-    packages=['biolib'],
+    packages=['biolib','biolib.misc', 'biolib.external', 'biolib.plots'],
     package_data={'biolib' : ['VERSION']},
     url='http://pypi.python.org/pypi/biolib/',
     license='GPL3',

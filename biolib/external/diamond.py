@@ -26,13 +26,13 @@ import os
 import sys
 import subprocess
 import logging
-from collections import namedtuple
 
 """
 To do:
  - this class and the blast class should mirror each other
    to the extent possible
 """
+
 
 class Diamond(object):
     """Wrapper for running diamond."""
@@ -58,53 +58,6 @@ class Diamond(object):
         except:
             self.logger.error("[Error] Make sure diamond is on your system path.")
             sys.exit(-1)
-
-    def read_blast_table(self, table):
-        """Generator function to read hits from a blast output table.
-
-        The table should be a TSV file in blast format 6. This is
-        also the format used by Diamond.
-
-        Parameters
-        ----------
-        table : str
-            Name of table to read.
-
-        Yields
-        ------
-        namedtuple
-            Information about blast hit.
-        """
-
-        BlastHit = namedtuple('BlastHit', """query_id
-                                                subject_id
-                                                perc_identity
-                                                aln_length
-                                                mismatch_count
-                                                gap_open_count
-                                                query_start
-                                                query_end
-                                                subject_start
-                                                subject_end
-                                                evalue
-                                                bitscore""")
-
-        for line in open(table):
-            line_split = line.split('\t')
-            hit = BlastHit(query_id=line_split[0],
-                            subject_id=line_split[1],
-                            perc_identity=float(line_split[2]),
-                            aln_length=int(line_split[3]),
-                            mismatch_count=int(line_split[4]),
-                            gap_open_count=int(line_split[5]),
-                            query_start=int(line_split[6]),
-                            query_end=int(line_split[7]),
-                            subject_start=int(line_split[8]),
-                            subject_end=int(line_split[9]),
-                            evalue=float(line_split[10]),
-                            bitscore=float(line_split[11]))
-
-            yield hit
 
     def blastx(self, nt_file, db_file, evalue, per_identity, max_target_seqs, output_file):
         """Apply diamond blastx to a set of nucleotide sequences.
@@ -135,5 +88,3 @@ class Diamond(object):
                                                                             per_identity,
                                                                             max_target_seqs,
                                                                             output_file))
-
-

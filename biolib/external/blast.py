@@ -35,6 +35,7 @@ To do:
    to the extent possible
 """
 
+
 class Blast():
     """Wrapper for running blast."""
 
@@ -53,6 +54,9 @@ class Blast():
 
         self.cpus = cpus
 
+        self.output_fmt = {'standard': '6',
+                            'custom': '6 qseqid qlen sseqid slen length pident evalue bitscore'}
+
     def _check_for_blast(self):
         """Check to see if blastp is on the system path."""
 
@@ -64,11 +68,14 @@ class Blast():
             self.logger.error("[Error] Make sure blastp is on your system path.")
             sys.exit(-1)
 
-    def blastp(self, query_seqs, prot_db, evalue, output_file):
+    def blastp(self, query_seqs, prot_db, evalue, output_fmt, output_file):
         """Apply blastp to query file.
 
         Finds homologs to query sequences using blastp homology search
-        against a protein database.
+        against a protein database. Hit can be reported using  either
+        the 'standard' table 6 format or the following 'custom' format:
+            qseqid qlen sseqid slen length pident evalue bitscore
+
 
         Parameters
         ----------
@@ -78,64 +85,13 @@ class Blast():
             File containing blastp formatted database.
         evalue : float
             E-value threshold used to identify homologs.
+        output_fmt : str
+            Specified output format of blast table: standard or custom.
         output_file : str
             Output file containing blastp results.
         """
 
         cmd = "blastp -num_threads %d" % self.cpus
         cmd += " -query %s -db %s -out %s -evalue %g" % (query_seqs, prot_db, output_file, evalue)
-        cmd += " -outfmt '6 qseqid qlen sseqid slen length pident evalue bitscore'"
+        cmd += " -outfmt %s" % self.output_fmt[output_fmt]
         os.system(cmd)
-
-class BlastParser():
-    """Parses output files produced with Blast."""
-
-    def __init__(self):
-        """Initialization."""
-        pass
-
-    def identify_homologs(self, blast_table, evalue_threshold, per_identity_threshold, per_aln_len_threshold):
-        """Identify homologs among blast hits.
-
-        Identifies hits satisfying the criteria required for a
-        gene to be considered a homolog.
-
-        Parameters
-        ----------
-        blast_table : str
-            File containing blast hits in the custom tabular format produced by BlastRunner.
-        evalue_threshold : float
-            E-value threshold used to define homologous gene.
-        per_identity_threshold : float
-            Percent identity threshold used to define a homologous gene.
-        per_aln_len_threshold : float
-            Alignment length threshold used to define a homologous gene.
-
-        Returns
-        -------
-        set
-            Identifiers for homologous genes.
-        """
-
-        homologs = set()
-        for line in open(blast_table):
-            line_split = line.split('\t')
-
-            _query_seq_id = line_split[0]
-            query_len = int(line_split[1])
-
-            sub_seq_id = line_split[2]
-            _subject_len = int(line_split[3])
-
-            aln_len = int(line_split[4])
-            per_ident = float(line_split[5])
-            evalue = float(line_split[6])
-            _bitscore = float(line_split[7])
-
-            if evalue <= evalue_threshold and per_ident >= per_identity_threshold:
-                per_aln_len = aln_len * 100.0 / query_len
-
-                if per_aln_len >= per_aln_len_threshold:
-                    homologs.add(sub_seq_id)
-
-        return homologs
