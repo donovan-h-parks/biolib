@@ -25,6 +25,18 @@ __email__ = 'donovan.parks@gmail.com'
 import argparse
 
 
+class ChangeTempAction(argparse.Action):
+    """Action for changing the directory used for temporary files.
+    
+    Example:
+        <parse>.add_argument('--tmpdir', action=ChangeTempAction, help="specify alternative directory for temporary files")
+    """
+    def __call__(self, parser, namespace, values, option_string=None):
+        if os.path.isdir(values):
+            tempfile.tempdir = values
+        else:
+            raise argparse.ArgumentTypeError('The value of %s must be a valid directory' % option_string)
+
 class CustomHelpFormatter(argparse.HelpFormatter):
     """Provide a customized format for help output.
 
