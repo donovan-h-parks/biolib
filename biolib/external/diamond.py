@@ -24,6 +24,7 @@ __email__ = 'donovan.parks@gmail.com'
 
 import os
 import sys
+import tempfile
 import subprocess
 import logging
 
@@ -81,10 +82,11 @@ class Diamond(object):
         if db_file.endswith('.dmnd'):
             db_file = db_file[0:db_file.rfind('.dmnd')]
 
-        os.system('diamond blastx --compress 0 -p %d -q %s -d %s -e %f --id %f -k %d -o %s' % (self.cpus,
-                                                                            nt_file,
-                                                                            db_file,
-                                                                            evalue,
-                                                                            per_identity,
-                                                                            max_target_seqs,
-                                                                            output_file))
+        os.system('diamond blastx --compress 0 -p %d -t %s -q %s -d %s -e %f --id %f -k %d -o %s' % (self.cpus,
+                                                                                                        tempfile.gettempdir(),
+                                                                                                        nt_file,
+                                                                                                        db_file,
+                                                                                                        evalue,
+                                                                                                        per_identity,
+                                                                                                        max_target_seqs,
+                                                                                                        output_file))

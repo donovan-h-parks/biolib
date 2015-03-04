@@ -56,8 +56,6 @@ def is_float(s):
 def concatenate_files(input_files, output_file):
     """Concatenate several files into a single file.
 
-    http://stackoverflow.com/questions/2669059/how-to-sort-alpha-numeric-set-in-python
-
     Creates a compressed file if the extension of
     the output file ends with .gz.
 

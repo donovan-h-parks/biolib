@@ -22,14 +22,16 @@ __license__ = 'GPL3'
 __maintainer__ = 'Donovan Parks'
 __email__ = 'donovan.parks@gmail.com'
 
+import os
+import tempfile
 import argparse
 
 
 class ChangeTempAction(argparse.Action):
     """Action for changing the directory used for temporary files.
-    
+
     Example:
-        <parse>.add_argument('--tmpdir', action=ChangeTempAction, help="specify alternative directory for temporary files")
+        <parse>.add_argument('--tmpdir', action=ChangeTempAction, default=tempfile.gettempdir(), help="specify alternative directory for temporary files")
     """
     def __call__(self, parser, namespace, values, option_string=None):
         if os.path.isdir(values):
