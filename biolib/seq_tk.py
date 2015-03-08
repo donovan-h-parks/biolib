@@ -33,192 +33,199 @@ To do:
 import string
 
 
-class SeqTk(object):
-    """Sequence manipulation and statistics."""
+"""Sequence manipulation and statistics."""
 
-    def __init__(self):
-        """Initialization."""
-        self.complements = string.maketrans('acgtrymkbdhvACGTRYMKBDHV', 'tgcayrkmvhdbTGCAYRKMVHDB')
+_complements = string.maketrans('acgtrymkbdhvACGTRYMKBDHV', 'tgcayrkmvhdbTGCAYRKMVHDB')
 
-    def count_nt(self, seq):
-        """Count occurences of each nucleotide in a sequence.
 
-        Only the bases A, C, G, and T(U) are counted. Ambiguous
-        bases are ignored.
+def count_nt(seq):
+    """Count occurences of each nucleotide in a sequence.
 
-        Parameters
-        ----------
-        seq : str
-            Nucleotide sequence.
+    Only the bases A, C, G, and T(U) are counted. Ambiguous
+    bases are ignored.
 
-        Returns
-        -------
-        list
-            Number of A, C, G, and T(U) in sequence.
-        """
+    Parameters
+    ----------
+    seq : str
+        Nucleotide sequence.
 
-        s = seq.upper()
-        a = s.count('A')
-        c = s.count('C')
-        g = s.count('G')
-        t = s.count('T') + s.count('U')
+    Returns
+    -------
+    list
+        Number of A, C, G, and T(U) in sequence.
+    """
 
-        return a, c, g, t
+    s = seq.upper()
+    a = s.count('A')
+    c = s.count('C')
+    g = s.count('G')
+    t = s.count('T') + s.count('U')
 
-    def gc(self, seq):
-        """Calculate GC content of a sequence.
+    return a, c, g, t
 
-        GC is calculated as (G+C)/(A+C+G+T), where
-        each of these terms represents the number
-        of nucleotides within the sequence. Ambiguous
-        and degenerate bases are ignored. Uracil (U)
-        is treated as a thymine (T).
 
-        Parameters
-        ----------
-        seq : str
-            Nucleotide sequence.
+def gc(seq):
+    """Calculate GC content of a sequence.
 
-        Returns
-        -------
-        float
-            GC content of sequence.
-        """
+    GC is calculated as (G+C)/(A+C+G+T), where
+    each of these terms represents the number
+    of nucleotides within the sequence. Ambiguous
+    and degenerate bases are ignored. Uracil (U)
+    is treated as a thymine (T).
 
-        a, c, g, t = self.count_nt(seq)
-        return float(g + c) / (a + c + g + t)
+    Parameters
+    ----------
+    seq : str
+        Nucleotide sequence.
 
-    def ambiguous_nucleotides(self, seq):
-        """Count ambiguous or degenerate nucleotides in a sequence.
+    Returns
+    -------
+    float
+        GC content of sequence.
+    """
 
-        Any base that is not a A, C, G, or T/U is considered
-        to be ambiguous or degenerate.
+    a, c, g, t = count_nt(seq)
+    return float(g + c) / (a + c + g + t)
 
-        Parameters
-        ----------
-        seq : str
-            Nucleotide sequence.
 
-        Returns
-        -------
-        int
-            Number of ambiguous and degenerate bases.
-        """
+def ambiguous_nucleotides(seq):
+    """Count ambiguous or degenerate nucleotides in a sequence.
 
-        a, c, g, t = self.count_nt(seq)
-        return len(seq) - (a + c + g + t)
+    Any base that is not a A, C, G, or T/U is considered
+    to be ambiguous or degenerate.
 
-    def rev_comp(self, seq):
-        """Rverse complement a sequence."""
-        return seq.translate(self.complements)[::-1]
+    Parameters
+    ----------
+    seq : str
+        Nucleotide sequence.
 
-    def N50(self, seqs):
-        """Calculate N50 for a set of sequences.
+    Returns
+    -------
+    int
+        Number of ambiguous and degenerate bases.
+    """
 
-         N50 is defined as the length of the longest
-         sequence, L, for which 50% of the total bases
-         are present in sequences of length >= L.
+    a, c, g, t = count_nt(seq)
+    return len(seq) - (a + c + g + t)
 
-        Parameters
-        ----------
-        seqs : dict[seq_id] -> seq
-            Sequences indexed by sequence ids.
 
-        Returns
-        -------
-        int
-            N50 for the set of sequences.
-        """
+def rev_comp(seq):
+    """Rverse complement a sequence."""
+    return seq.translate(_complements)[::-1]
 
-        seq_lens = [len(x) for x in seqs.values()]
-        threshold = sum(seq_lens) / 2.0
 
-        seq_lens.sort(reverse=True)
+def N50(seqs):
+    """Calculate N50 for a set of sequences.
 
-        current_sum = 0
-        for seq_len in seq_lens:
-            current_sum += seq_len
-            if current_sum >= threshold:
-                N50 = seq_len
-                break
+     N50 is defined as the length of the longest
+     sequence, L, for which 50% of the total bases
+     are present in sequences of length >= L.
 
-        return N50
+    Parameters
+    ----------
+    seqs : dict[seq_id] -> seq
+        Sequences indexed by sequence ids.
 
-    def mean_length(self, seqs):
-        """Calculate mean length of sequences.
+    Returns
+    -------
+    int
+        N50 for the set of sequences.
+    """
 
-        Parameters
-        ----------
-        seqs : dict[seq_id] -> seq
-            Sequences indexed by sequence ids.
+    seq_lens = [len(x) for x in seqs.values()]
+    threshold = sum(seq_lens) / 2.0
 
-        Returns
-        -------
-        int
-            Mean length of sequences.
-        """
+    seq_lens.sort(reverse=True)
 
-        """***TO DO***"""
-        pass
+    current_sum = 0
+    for seq_len in seq_lens:
+        current_sum += seq_len
+        if current_sum >= threshold:
+            N50 = seq_len
+            break
 
-    def max_length(self, seqs):
-        """Identify longest sequence.
+    return N50
 
-        Parameters
-        ----------
-        seqs : dict[seq_id] -> seq
-            Sequences indexed by sequence ids.
 
-        Returns
-        -------
-        int
-            Length of longest sequence.
-        """
+def mean_length(seqs):
+    """Calculate mean length of sequences.
 
-        """
+    Parameters
+    ----------
+    seqs : dict[seq_id] -> seq
+        Sequences indexed by sequence ids.
 
-        ***TO DO***"""
-        pass
+    Returns
+    -------
+    int
+        Mean length of sequences.
+    """
 
-    def coding_density(self):
-        pass
+    """***TO DO***"""
+    pass
 
-    def extract_contigs(self, seq, num_ambiguous_bases=10):
-        pass
 
-    def fragment(self, seq, window_size, step_size):
-        """Fragment sequence into fixed sized windows.
+def max_length(seqs):
+    """Identify longest sequence.
 
-        The last fragment may not be shorter than
-        the window size, but will only be generated
-        if it is at least half the window size.
+    Parameters
+    ----------
+    seqs : dict[seq_id] -> seq
+        Sequences indexed by sequence ids.
 
-        Parameters
-        ----------
-        seq : str
-            Sequence to fragment.
-        window_size : int
-            Size of each fragment.
-        step_size : int
-            Number of bases to move after each window.
+    Returns
+    -------
+    int
+        Length of longest sequence.
+    """
 
-        Returns
-        -------
-        list
-            Fragments from sequences.
-        """
+    """
 
-        fragments = []
-        start = 0
-        for i in xrange(0, len(seq), step_size):
-            end = i + window_size
-            if end < len(seq):
-                fragments.append(seq[start:end])
-                start = end
+    ***TO DO***"""
+    pass
 
-        # get last fragment if it is at least half
-        # the specified window size
-        if len(seq) - start >= 0.5 * window_size:
-            fragments.append(seq[start:])
 
-        return fragments
+def coding_density():
+    pass
+
+
+def extract_contigs(seq, num_ambiguous_bases=10):
+    pass
+
+
+def fragment(seq, window_size, step_size):
+    """Fragment sequence into fixed sized windows.
+
+    The last fragment may not be shorter than
+    the window size, but will only be generated
+    if it is at least half the window size.
+
+    Parameters
+    ----------
+    seq : str
+        Sequence to fragment.
+    window_size : int
+        Size of each fragment.
+    step_size : int
+        Number of bases to move after each window.
+
+    Returns
+    -------
+    list
+        Fragments from sequences.
+    """
+
+    fragments = []
+    start = 0
+    for i in xrange(0, len(seq), step_size):
+        end = i + window_size
+        if end < len(seq):
+            fragments.append(seq[start:end])
+            start = end
+
+    # get last fragment if it is at least half
+    # the specified window size
+    if len(seq) - start >= 0.5 * window_size:
+        fragments.append(seq[start:])
+
+    return fragments

@@ -23,8 +23,6 @@ __maintainer__ = 'Donovan Parks'
 __email__ = 'donovan.parks@gmail.com'
 
 import os
-import sys
-import subprocess
 import logging
 import tempfile
 import shutil
@@ -32,6 +30,7 @@ import shutil
 from biolib.common import check_file_exists, remove_extension
 from biolib.seq_io import read_fasta
 from biolib.parallel import Parallel
+from biolib.external.execute import check_on_path
 
 import numpy as np
 
@@ -52,18 +51,10 @@ class Prodigal(object):
 
         self.logger = logging.getLogger()
 
-        self._check_for_prodigal()
+        check_on_path('prodigal')
 
         self.cpus = cpus
         self.verbose = verbose
-
-    def _check_for_prodigal(self):
-        """Check to see if Prodigal is on the system path."""
-        try:
-            subprocess.call(['prodigal', '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
-        except:
-            self.logger.info("[Error] Make sure prodigal is on your system path.")
-            sys.exit(-1)
 
     def _producer(self, genome_file):
         """Apply prodigal to genome with most suitable translation table.

@@ -23,16 +23,10 @@ __maintainer__ = 'Donovan Parks'
 __email__ = 'donovan.parks@gmail.com'
 
 import os
-import sys
 import tempfile
-import subprocess
 import logging
 
-"""
-To do:
- - this class and the blast class should mirror each other
-   to the extent possible
-"""
+from biolib.external.execute import check_on_path
 
 
 class Diamond(object):
@@ -48,19 +42,65 @@ class Diamond(object):
         """
         self.logger = logging.getLogger()
 
-        self._check_for_diamond()
+        check_on_path('diamond')
 
         self.cpus = cpus
 
-    def _check_for_diamond(self):
-        """Check to see if BLAST is on the system path."""
-        try:
-            subprocess.call(['diamond', '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
-        except:
-            self.logger.error("[Error] Make sure diamond is on your system path.")
-            sys.exit(-1)
+    def make_database(self, prot_file, db_file):
+        """Make diamond database.
 
-    def blastx(self, nt_file, db_file, evalue, per_identity, max_target_seqs, output_file):
+        Parameters
+        ----------
+        prot_file : str
+            Fasta file with protein sequences.
+        db_file : str
+            Desired name of Diamond database.
+        """
+
+        cmd = 'diamond makedb -p %d --in %s -d %s' % (self.cpus, prot_file, db_file)
+        os.system(cmd)
+
+    def blastp(self, prot_file, db_file, evalue, per_identity, max_target_seqs, diamond_daa_file):
+        """Apply diamond blastp to a set of protein sequences.
+
+        Parameters
+        ----------
+        prot_file : str
+            Fasta file with protein sequences.
+        db_file : str
+            Diamond database of protein sequences.
+        evalue : float
+            E-value threshold used by blast.
+        per_identity : float
+            Percent identity threshold used by blast [0, 100].
+        max_target_seqs : int
+            Maximum number of hits to report per sequence.
+        diamond_daa_file : str
+            Desired name of Diamond data file.
+        """
+
+        if False:
+            # minor hack as diamond <= 0.7.2 does not fully work with --id flag
+            cmd = "diamond blastp -p %d -t %s -q %s -d %s -e %g --id %f -k %d -a %s" % (self.cpus,
+                                                                                    tempfile.gettempdir(),
+                                                                                    prot_file,
+                                                                                    db_file,
+                                                                                    evalue,
+                                                                                    per_identity,
+                                                                                    max_target_seqs,
+                                                                                    diamond_daa_file)
+
+        cmd = "diamond blastp -p %d -t %s -q %s -d %s -e %g -k %d -a %s" % (self.cpus,
+                                                                                    tempfile.gettempdir(),
+                                                                                    prot_file,
+                                                                                    db_file,
+                                                                                    evalue,
+                                                                                    max_target_seqs,
+                                                                                    diamond_daa_file)
+
+        os.system(cmd)
+
+    def blastx(self, nt_file, db_file, evalue, per_identity, max_target_seqs, diamond_daa_file):
         """Apply diamond blastx to a set of nucleotide sequences.
 
         Parameters
@@ -68,25 +108,46 @@ class Diamond(object):
         nt_file : str
             Fasta file with nucleotide sequences.
         db_file : str
-            Diamond database of protein sequeces.
+            Diamond database of protein sequences.
         evalue : float
             E-value threshold used by blast.
         per_identity : float
-            Percent identity threshold used by blast.
+            Percent identity threshold used by blast [0, 100].
         max_target_seqs : int
             Maximum number of hits to report per sequence.
-        output_file : str
-            File to store hits identified by diamond.
+        diamond_daa_file : str
+            Desired name of Diamond data file.
         """
 
         if db_file.endswith('.dmnd'):
             db_file = db_file[0:db_file.rfind('.dmnd')]
 
-        os.system('diamond blastx --compress 0 -p %d -t %s -q %s -d %s -e %f --id %f -k %d -o %s' % (self.cpus,
-                                                                                                        tempfile.gettempdir(),
-                                                                                                        nt_file,
-                                                                                                        db_file,
-                                                                                                        evalue,
-                                                                                                        per_identity,
-                                                                                                        max_target_seqs,
-                                                                                                        output_file))
+        cmd = 'diamond blastx -p %d -t %s -q %s -d %s -e %f --id %f -k %d -a %s' % (self.cpus,
+                                                                                        tempfile.gettempdir(),
+                                                                                        nt_file,
+                                                                                        db_file,
+                                                                                        evalue,
+                                                                                        per_identity,
+                                                                                        max_target_seqs,
+                                                                                        diamond_daa_file)
+
+        os.system(cmd)
+
+    def view(self, diamond_daa_file, output_table, compress=False):
+        """Generate flat file from diamond DAA file.
+
+        Parameters
+        ----------
+        diamond_daa_file : str
+            Diamond DAA file.
+        output_table : str
+            Diamond database of protein sequeces.
+        compress : boolean
+            Flag indicating if output table should be compressed.
+        """
+
+        cmd = 'diamond view -p %d -a %s -o %s --compress %d' % (self.cpus,
+                                                                    diamond_daa_file,
+                                                                    output_table,
+                                                                    compress)
+        os.system(cmd)

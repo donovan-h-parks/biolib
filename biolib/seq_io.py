@@ -24,6 +24,7 @@ __email__ = 'donovan.parks@gmail.com'
 
 import sys
 import gzip
+import traceback
 
 
 def read_fasta(fasta_file):
@@ -40,10 +41,9 @@ def read_fasta(fasta_file):
         Sequences indexed by sequence id.
     """
     try:
+        open_file = open
         if fasta_file.endswith('.gz'):
             open_file = gzip.open
-        else:
-            open_file = open
 
         seqs = {}
         for line in open_file(fasta_file):
@@ -60,13 +60,53 @@ def read_fasta(fasta_file):
         for seq_id, seq in seqs.iteritems():
             seqs[seq_id] = ''.join(seq)
     except:
+        print traceback.format_exc()
+        print ''
         print  "[Error] Failed to process sequence file: " + fasta_file
         sys.exit()
 
     return seqs
 
 
-def read_seq(fasta_file):
+def read_fastq(fastq_file):
+    """Read sequences from fastq file.
+
+    Parameters
+    ----------
+    fastq_file : str
+        Name of fastq file to read.
+
+    Returns
+    -------
+    dict : dict[seq_id] -> seq
+        Sequences indexed by sequence id.
+    """
+    try:
+        open_file = open
+        if fastq_file.endswith('.gz'):
+            open_file = gzip.open
+
+        seqs = {}
+        line_num = 0
+        for line in open_file(fastq_file):
+            line_num += 1
+
+            if line_num == 1:
+                seq_id = line[1:].split(None, 1)[0]
+            elif line_num == 2:
+                seqs[seq_id].seq = line[0:-1]
+            elif line_num == 4:
+                line_num = 0
+    except:
+        print traceback.format_exc()
+        print ''
+        print  "[Error] Failed to process sequence file: " + fastq_file
+        sys.exit()
+
+    return seqs
+
+
+def read_fasta_seq(fasta_file):
     """Generator function to read sequences from fasta file.
 
     This function is intended to be used as a generator
@@ -90,10 +130,9 @@ def read_seq(fasta_file):
         Unique id of the sequence followed by the sequence itself.
     """
     try:
+        open_file = open
         if fasta_file.endswith('.gz'):
             open_file = gzip.open
-        else:
-            open_file = open
 
         seq_id = None
         seq = None
@@ -114,7 +153,54 @@ def read_seq(fasta_file):
         # report last sequence
         yield seq_id, ''.join(seq)
     except:
+        print traceback.format_exc()
+        print ''
         print  "[Error] Failed to process sequence file: " + fasta_file
+        sys.exit()
+
+
+def read_fastq_seq(fastq_file):
+    """Generator function to read sequences from fastq file.
+
+    This function is intended to be used as a generator
+    in order to avoid having to have large sequence files
+    in memory.
+
+    Example:
+    seq_io = SeqIO()
+    for seq_id, seq in seq_io.read_seq(fastq_file):
+        print seq_id
+        print seq
+
+    Parameters
+    ----------
+    fastq_file : str
+        Name of fastq file to read.
+
+    Yields
+    ------
+    list : [seq_id, seq]
+        Unique id of the sequence followed by the sequence itself.
+    """
+    try:
+        open_file = open
+        if fastq_file.endswith('.gz'):
+            open_file = gzip.open
+
+        line_num = 0
+        for line in open_file(fastq_file):
+            line_num += 1
+
+            if line_num == 1:
+                seq_id = line[1:].split(None, 1)[0]
+            elif line_num == 2:
+                yield seq_id, line[0:-1]
+            elif line_num == 4:
+                line_num = 0
+    except:
+        print traceback.format_exc()
+        print ''
+        print  "[Error] Failed to process sequence file: " + fastq_file
         sys.exit()
 
 
@@ -167,7 +253,7 @@ def seq_lengths(fasta_file):
         Length of each sequence.
     """
     lens = {}
-    for seq_id, seq in read_seq(fasta_file):
+    for seq_id, seq in read_fasta_seq(fasta_file):
         lens[seq_id] = len(seq)
 
     return lens

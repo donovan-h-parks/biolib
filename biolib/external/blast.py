@@ -24,9 +24,9 @@ __email__ = "donovan.parks@gmail.com"
 __status__ = "Development"
 
 import os
-import sys
 import logging
-import subprocess
+
+from biolib.external.execute import check_on_path
 
 """
 To do:
@@ -50,23 +50,12 @@ class Blast():
 
         self.logger = logging.getLogger()
 
-        self._check_for_blast()
+        check_on_path('blastp')
 
         self.cpus = cpus
 
         self.output_fmt = {'standard': '6',
                             'custom': '6 qseqid qlen sseqid slen length pident evalue bitscore'}
-
-    def _check_for_blast(self):
-        """Check to see if blastp is on the system path."""
-
-        # Assume that a successful blast -help returns 0 and anything
-        # else returns non-zero
-        try:
-            subprocess.call(['blastp', '-help'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
-        except:
-            self.logger.error("[Error] Make sure blastp is on your system path.")
-            sys.exit(-1)
 
     def blastp(self, query_seqs, prot_db, evalue, output_fmt, output_file):
         """Apply blastp to query file.

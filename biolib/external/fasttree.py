@@ -16,7 +16,6 @@
 ###############################################################################
 
 import os
-import sys
 import logging
 
 __author__ = "Donovan Parks"
@@ -27,6 +26,8 @@ __maintainer__ = "Donovan Parks"
 __email__ = "donovan.parks@gmail.com"
 __status__ = "Development"
 
+from biolib.external.execute import check_on_path
+
 
 class FastTree():
     """Wrapper for running FastTree."""
@@ -35,22 +36,12 @@ class FastTree():
         """Initialization."""
         self.logger = logging.getLogger()
 
-        self._check_for_fasttree()
-
         self.multithreaded = multithreaded
 
-    def _check_for_fasttree(self):
-        """Check to see if FastTree is on the system path."""
-
-        try:
-            exit_status = os.system('FastTree 2> /dev/null')
-        except:
-            print "Unexpected error!", sys.exc_info()[0]
-            raise
-
-        if exit_status != 0:
-            self.logger.error("[Error] FastTree is not on the system path.")
-            sys.exit(-1)
+        if self.multithreaded:
+            check_on_path('FastTreeMP')
+        else:
+            check_on_path('FastTree')
 
     def run(self, msa_file, seq_type, model_str, output_tree, output_tree_log, log_file=None):
         """Infer tree using FastTree.
@@ -84,11 +75,11 @@ class FastTree():
         if not log_file:
             log_file = '/dev/null'
 
-        cmd = '-quiet -nosupport -gamma %s %s -log %s %s > %s 2> %s' % (seq_type_str, 
-                                                                        model_str, 
-                                                                        output_tree_log, 
-                                                                        msa_file, 
-                                                                        output_tree, 
+        cmd = '-quiet -nosupport -gamma %s %s -log %s %s > %s 2> %s' % (seq_type_str,
+                                                                        model_str,
+                                                                        output_tree_log,
+                                                                        msa_file,
+                                                                        output_tree,
                                                                         log_file)
         if self.multithreaded:
             cmd = 'FastTreeMP ' + cmd

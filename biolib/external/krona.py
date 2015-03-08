@@ -28,29 +28,27 @@ import logging
 
 from biolib.external.execute import check_on_path
 
+""" This is just a stub right now. """
 
-class MuscleRunner():
-    """Wrapper for running muscle."""
+
+class Krona():
+    """Wrapper for creating Krona plots with KronaTools."""
 
     def __init__(self):
         """Initialization."""
+
         self.logger = logging.getLogger()
 
-        check_on_path('muscle')
+        check_on_path('ktImportText')
 
-    def run(self, seqs, output_file, log_file):
-        """Apply muscle to query sequences.
+    def create(self):
+        """Create Krona plot from ...
 
-        Parameters
-        ----------
-        seqs : str
-            Fasta file with sequence to alignment.
-        output_file: str
-            Output file containing multiple sequence alignment.
-        log_file: str
-            Output file containing information about running of muscle.
         """
+        pass
+        #cmd = ["ktImportText",'-o',outputName]
+        #for i, tmp in enumerate(tempfile_paths):
+        #    cmd.append(','.join([tmp,otuTables[i].sample_name]))
 
-        cmd = 'muscle -quiet -in %s -out %s -log %s' % (seqs, output_file, log_file)
-        os.system(cmd)
-
+        # run the actual krona
+        #subprocess.check_call(' '.join(cmd), shell=True)
