@@ -22,13 +22,6 @@ __license__ = 'GPL3'
 __maintainer__ = 'Donovan Parks'
 __email__ = 'donovan.parks@gmail.com'
 
-"""
-*****************************************************************************
-To do:
- - this class still needs a lot of work
- - anything for calculating sequence statistics should be put in here
-*****************************************************************************
-"""
 
 import string
 
@@ -161,8 +154,11 @@ def mean_length(seqs):
         Mean length of sequences.
     """
 
-    """***TO DO***"""
-    pass
+    total_len = 0
+    for _seq_id, seq in seqs:
+        total_len += len(seq)
+        
+    return float(total_len) / len(seqs)
 
 
 def max_length(seqs):
@@ -179,18 +175,11 @@ def max_length(seqs):
         Length of longest sequence.
     """
 
-    """
-
-    ***TO DO***"""
-    pass
-
-
-def coding_density():
-    pass
-
-
-def extract_contigs(seq, num_ambiguous_bases=10):
-    pass
+    longest_seq = 0
+    for _seq_id, seq in seqs:
+        longest_seq = max(longest_seq, len(seq))
+    
+    return longest_seq
 
 
 def fragment(seq, window_size, step_size):
