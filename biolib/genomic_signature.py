@@ -116,6 +116,35 @@ class GenomicSignature(object):
 
         return d
 
+    def canonical_order(self):
+        """Canonical order of kmers."""
+        return self.kmer_cols
+
+    def seq_signature(self, seq):
+        """Calculate genomic signature of a sequence.
+
+        Parameters
+        ----------
+        seq : str
+            Sequences.
+
+        Returns
+        -------
+        list
+            Count of each kmer in the canonical order.
+        """
+
+        sig = [0] * len(self.kmer_cols)
+        for i in xrange(0, len(seq) - self.k + 1):
+            try:
+                kmer_index = self.kmer_index[seq[i:i + self.k]]
+                sig[kmer_index] += 1
+            except KeyError:
+                # unknown kmer due to an ambiguous character
+                pass
+
+        return sig
+
     def manhattan(self, sig1, sig2):
         """Calculate Manhattan distance between genomic signatures.
 

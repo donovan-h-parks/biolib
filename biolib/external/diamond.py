@@ -79,24 +79,17 @@ class Diamond(object):
             Desired name of Diamond data file.
         """
 
-        if False:
-            # minor hack as diamond <= 0.7.2 does not fully work with --id flag
-            cmd = "diamond blastp -p %d -t %s -q %s -d %s -e %g --id %f -k %d -a %s" % (self.cpus,
-                                                                                    tempfile.gettempdir(),
-                                                                                    prot_file,
-                                                                                    db_file,
-                                                                                    evalue,
-                                                                                    per_identity,
-                                                                                    max_target_seqs,
-                                                                                    diamond_daa_file)
+        if db_file.endswith('.dmnd'):
+            db_file = db_file[0:db_file.rfind('.dmnd')]
 
-        cmd = "diamond blastp -p %d -t %s -q %s -d %s -e %g -k %d -a %s" % (self.cpus,
-                                                                                    tempfile.gettempdir(),
-                                                                                    prot_file,
-                                                                                    db_file,
-                                                                                    evalue,
-                                                                                    max_target_seqs,
-                                                                                    diamond_daa_file)
+        cmd = "diamond blastp --seg no -p %d -t %s -q %s -d %s -e %g --id %f -k %d -a %s" % (self.cpus,
+                                                                                tempfile.gettempdir(),
+                                                                                prot_file,
+                                                                                db_file,
+                                                                                evalue,
+                                                                                per_identity,
+                                                                                max_target_seqs,
+                                                                                diamond_daa_file)
 
         os.system(cmd)
 
@@ -122,7 +115,7 @@ class Diamond(object):
         if db_file.endswith('.dmnd'):
             db_file = db_file[0:db_file.rfind('.dmnd')]
 
-        cmd = 'diamond blastx -p %d -t %s -q %s -d %s -e %f --id %f -k %d -a %s' % (self.cpus,
+        cmd = 'diamond blastx --seg no -p %d -t %s -q %s -d %s -e %f --id %f -k %d -a %s' % (self.cpus,
                                                                                         tempfile.gettempdir(),
                                                                                         nt_file,
                                                                                         db_file,

@@ -27,6 +27,8 @@ import logging
 import traceback
 import multiprocessing as mp
 
+import biolib.seq_io as seq_io
+
 
 class Parallel(object):
     """Processes data in parallel.
@@ -181,6 +183,89 @@ class Parallel(object):
                 produced_data = consumer_queue.get(block=True, timeout=None)
                 if produced_data == None:
                     break
+
+                if consumer:
+                    consumer_data = consumer(produced_data, consumer_data)
+
+                items_processed += 1
+
+            if progress:
+                sys.stdout.write('\n')
+
+            manager_proc.join()
+
+            return consumer_data
+        except Exception, _err:
+            print sys.exc_info()[0]
+            print traceback.format_exc()
+            self.logger.warning('  [Warning] Exception encountered while processing data.')
+            manager_proc.terminate()
+
+    def run_seqs_file(self, producer, consumer, seq_file, progress=None):
+        """Process sequences in parallel.
+
+        The producer function must be specified and must
+        not return None. Consumer and progress can be set to None.
+
+        Parameters
+        ----------
+        producer : function
+            Function to process data items.
+        consumer : queue
+            Function to consumed processed data items.
+        seq_file : str
+            Name of fasta/q file to read.
+        progress : function
+            Function to report progress string.
+
+        Returns
+        -------
+        <user specified>
+            Set by caller in the consumer function.
+        """
+
+        # populate producer queue with data to process
+        seq_iter = seq_io.read_seq(seq_file)
+        producer_queue = mp.Queue()
+        read_all_seqs = False
+        for _ in xrange(self.cpus):
+            try:
+                seq_data = seq_iter.next()
+                producer_queue.put(seq_data)
+            except StopIteration:
+                read_all_seqs = True
+                for _ in range(self.cpus):
+                    producer_queue.put(None)  # signal processes to terminate
+                break
+
+        data_items = sum(1 for _ in seq_io.read_seq(seq_file))
+        try:
+            consumer_queue = mp.Queue()
+            manager_proc = mp.Process(target=self.__process_manager, args=(producer, producer_queue, consumer_queue))
+
+            manager_proc.start()
+
+            # process items produced by workers
+            items_processed = 0
+            consumer_data = None
+            while True:
+                if progress:
+                    status = progress(items_processed, data_items)
+                    sys.stdout.write('%s\r' % status)
+                    sys.stdout.flush()
+
+                produced_data = consumer_queue.get(block=True, timeout=None)
+                if produced_data == None:
+                    break
+
+                if not read_all_seqs:
+                    try:
+                        seq_data = seq_iter.next()
+                        producer_queue.put(seq_data)
+                    except StopIteration:
+                        read_all_seqs = True
+                        for _ in range(self.cpus):
+                            producer_queue.put(None)  # signal processes to terminate
 
                 if consumer:
                     consumer_data = consumer(produced_data, consumer_data)

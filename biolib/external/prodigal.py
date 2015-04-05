@@ -26,6 +26,7 @@ import os
 import logging
 import tempfile
 import shutil
+from collections import defaultdict, namedtuple
 
 from biolib.common import check_file_exists, remove_extension
 from biolib.seq_io import read_fasta
@@ -71,6 +72,8 @@ class Prodigal(object):
         nt_gene_file = os.path.join(self.output_dir, genome_id + '.genes.fna')
         gff_file = os.path.join(self.output_dir, genome_id + '.gff')
 
+        best_translation_table = -1
+        table_coding_density = {4:-1, 11:-1}
         if self.called_genes:
             os.system('cp %s %s' % (os.path.abspath(genome_file), aa_gene_file))
         else:
@@ -84,15 +87,19 @@ class Prodigal(object):
                 total_bases += len(seq)
 
             # call genes under different translation tables
-            table_coding_density = {}
-            for translation_table in [4, 11]:
+            if self.translation_table:
+                translation_tables = [self.translation_table]
+            else:
+                translation_tables = [4, 11]
+
+            for translation_table in translation_tables:
                 os.makedirs(os.path.join(tmp_dir, str(translation_table)))
                 aa_gene_file_tmp = os.path.join(tmp_dir, str(translation_table), genome_id + '.genes.faa')
                 nt_gene_file_tmp = os.path.join(tmp_dir, str(translation_table), genome_id + '.genes.fna')
                 gff_file_tmp = os.path.join(tmp_dir, str(translation_table), genome_id + '.gff')
 
                 # check if there is sufficient bases to calculate prodigal parameters
-                if total_bases < 100000:
+                if total_bases < 100000 or self.meta:
                     proc_str = 'meta'  # use best precalculated parameters
                 else:
                     proc_str = 'single'  # estimate parameters from data
@@ -109,16 +116,19 @@ class Prodigal(object):
                 prodigalParser = ProdigalGeneFeatureParser(gff_file_tmp)
 
                 codingBases = 0
-                for seq_id, seq in seqs.iteritems():
+                for seq_id, _seq in seqs.iteritems():
                     codingBases += prodigalParser.coding_bases(seq_id)
 
                 codingDensity = float(codingBases) / total_bases
                 table_coding_density[translation_table] = codingDensity
 
             # determine best translation table
-            best_translation_table = 11
-            if (table_coding_density[4] - table_coding_density[11] > 0.05) and table_coding_density[4] > 0.7:
-                best_translation_table = 4
+            if not self.translation_table:
+                best_translation_table = 11
+                if (table_coding_density[4] - table_coding_density[11] > 0.05) and table_coding_density[4] > 0.7:
+                    best_translation_table = 4
+            else:
+                best_translation_table = self.translation_table
 
             shutil.copyfile(os.path.join(tmp_dir, str(best_translation_table), genome_id + '.genes.faa'), aa_gene_file)
             shutil.copyfile(os.path.join(tmp_dir, str(best_translation_table), genome_id + '.genes.fna'), nt_gene_file)
@@ -127,7 +137,35 @@ class Prodigal(object):
             # clean up temporary files
             shutil.rmtree(tmp_dir)
 
-        return True
+        return (genome_id, best_translation_table, table_coding_density[4], table_coding_density[11])
+
+    def _consumer(self, produced_data, consumer_data):
+        """Consume results from producer processes.
+
+         Parameters
+        ----------
+        produced_data : tuple
+            Summary statistics for called genes for a specific genome.
+        consumer_data : list
+            Summary statistics of called genes for each genome.
+
+        Returns
+        -------
+        consumer_data: d[genome_id] -> namedtuple(best_translation_table
+                                                        coding_density_4
+                                                        coding_density_11)
+            Summary statistics of called genes for each genome.
+        """
+
+        ConsumerData = namedtuple('ConsumerData', 'best_translation_table coding_density_4 coding_density_11')
+        if consumer_data == None:
+            consumer_data = defaultdict(ConsumerData)
+
+        genome_id, best_translation_table, coding_density_4, coding_density_11 = produced_data
+
+        consumer_data[genome_id] = ConsumerData(best_translation_table, coding_density_4, coding_density_11)
+
+        return consumer_data
 
     def _progress(self, processed_items, total_items):
         """Report progress of consumer processes.
@@ -145,9 +183,9 @@ class Prodigal(object):
             String indicating progress of data processing.
         """
 
-        return '    Finished processing %d of %d (%.2f%%) genomes.' % (processed_items, total_items, float(processed_items) * 100 / total_items)
+        return self.progress_str % (processed_items, total_items, float(processed_items) * 100 / total_items)
 
-    def run(self, genome_files, called_genes, output_dir):
+    def run(self, genome_files, called_genes, translation_table, meta, output_dir):
         """Call genes with Prodigal.
 
         Call genes with prodigal and store the results in the
@@ -162,20 +200,42 @@ class Prodigal(object):
             Nucleotide fasta files to call genes on.
         called_genes : boolean
             Flag indicating genes are already called.
+        translation_table : int
+            Specifies desired translation table, use None to automatically
+            select between tables 4 and 11.
+        meta : boolean
+            Flag indicating if prodigal should call genes with the metagenomics procedure.
         output_dir : str
             Directory to store called genes.
+
+        Returns
+        -------
+        d[genome_id] -> namedtuple(best_translation_table
+                                            coding_density_4
+                                            coding_density_11)
+            Summary statistics of called genes for each genome.
         """
 
         self.called_genes = called_genes
+        self.translation_table = translation_table
+        self.meta = meta
         self.output_dir = output_dir
 
         progress_func = None
         if self.verbose:
-            self.logger.info('  Identifying genes within genomes:')
+            file_type = 'genomes'
+            self.progress_str = '    Finished processing %d of %d (%.2f%%) genomes.'
+            if meta:
+                file_type = 'scaffolds'
+                self.progress_str = '    Finished processing %d of %d (%.2f%%) files.'
+
+            self.logger.info('  Identifying genes within %s:' % file_type)
             progress_func = self._progress
 
         parallel = Parallel(self.cpus)
-        parallel.run(self._producer, None, genome_files, progress_func)
+        summary_stats = parallel.run(self._producer, self._consumer, genome_files, progress_func)
+
+        return summary_stats
 
 
 class ProdigalGeneFeatureParser():

@@ -25,8 +25,8 @@ __status__ = "Development"
 
 from collections import defaultdict
 
+import biolib.seq_io as seq_io
 from biolib.common import remove_extension
-from biolib.seq_io import read_fasta_seq
 
 """
 Functions for verify, exploring, modifying and
@@ -57,7 +57,7 @@ def unique(genome_files):
         genome_id = remove_extension(f)
 
         seq_ids = set()
-        for seq_id, _seq in read_fasta_seq(f):
+        for seq_id, _seq in seq_io.read_seq(f):
             if seq_id in seq_ids:
                 duplicates[genome_id][genome_id].append(seq_id)
 
@@ -80,3 +80,50 @@ def unique(genome_files):
                 duplicates[genome_ids[j]][genome_ids[i]] = seq_intersection
 
     return duplicates
+
+
+def modify(self, input_file, scaffold_file, seqs_to_add, seqs_to_remove, output_file):
+    """Add or remove scaffolds from a fasta file.
+
+    Parameters
+    ----------
+    input_file : str
+        Fasta file to modify.
+    scaffold_file : str
+        Fasta file containing scaffolds to add.
+    seqs_to_add: iterable
+        Unique ids of scaffolds to add.
+    seqs_to_remove : iterable
+        Unique ids of scaffolds to remove.
+    output_file : str
+        Desired name of modified fasta file.
+
+    Returns
+    -------
+    iterable, iterable
+        Unique ids of sequences that could not be added,
+        unique ids of sequences that could not be removed.
+    """
+
+    seqs = seq_io.read(input_file)
+
+    # add sequences to bin
+    failed_to_add = set(seqs_to_add)
+    if seqs_to_add != None:
+        for seq_id, seq in seq_io.read_seq(scaffold_file):
+            if seq_id in seqs_to_add:
+                failed_to_add.remove(seq_id)
+                seqs[seq_id] = seq
+
+    # remove sequences from bin
+    failed_to_remove = set(seqs_to_remove)
+    if seqs_to_remove != None:
+        for seq_id in seqs_to_remove:
+            if seq_id in seqs:
+                failed_to_remove.remove(seq_id)
+                seqs.pop(seq_id)
+
+    # save modified bin
+    seq_io.write_fasta(seqs, output_file)
+
+    return failed_to_add, failed_to_remove

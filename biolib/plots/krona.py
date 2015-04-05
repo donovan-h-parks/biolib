@@ -24,11 +24,12 @@ __email__ = "donovan.parks@gmail.com"
 __status__ = "Development"
 
 import os
+import shutil
 import logging
+import tempfile
 
-from biolib.external.execute import check_on_path
-
-""" This is just a stub right now. """
+import biolib.external.execute as execute
+from biolib.common import alphanumeric_sort
 
 
 class Krona():
@@ -39,16 +40,45 @@ class Krona():
 
         self.logger = logging.getLogger()
 
-        check_on_path('ktImportText')
+        execute.check_on_path('ktImportText')
 
-    def create(self):
-        """Create Krona plot from ...
+    def create(self, profiles, output_file):
+        """Create Krona plot.
 
+        Profiles for multiple items (e.g., genome, metagenome) can
+        be specified. The complete hierarchy for each unique element
+        should be specified as a semicolon separated string, e.g.,
+
+            k__Bacteria;c__Firmicutes;...;s__
+
+        The number of hits to each unique element is specified in
+        the profiles dictionary, e.g.,
+
+            d[unique_id][element_str] = 10
+
+        Parameters
+        ----------
+        profiles: d[unique_id][element_str] -> count
+            Number of hits to specific elements for each item.
+        output_file : str
+            Name of output file.
         """
-        pass
-        #cmd = ["ktImportText",'-o',outputName]
-        #for i, tmp in enumerate(tempfile_paths):
-        #    cmd.append(','.join([tmp,otuTables[i].sample_name]))
 
-        # run the actual krona
-        #subprocess.check_call(' '.join(cmd), shell=True)
+        # create temporary files for each item
+        cmd_args = ['ktImportText', '-o', output_file]
+        tmp_dir = tempfile.mkdtemp()
+        for unique_id in alphanumeric_sort(profiles.keys()):
+            tmp_file = os.path.join(tmp_dir, unique_id)
+            fout = open(tmp_file, 'w')
+            for element_str, num_hits in profiles[unique_id].iteritems():
+                elements = [x.strip() for x in element_str.split(';')]
+                fout.write(str(num_hits) + '\t' + '\t'.join(elements) + '\n')
+            fout.close()
+
+            cmd_args.append('%s,%s' % (tmp_file, unique_id))
+
+        # create krona plot
+        execute.run(cmd_args)
+
+        # clean up temporary files
+        shutil.rmtree(tmp_dir)

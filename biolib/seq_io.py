@@ -22,9 +22,34 @@ __license__ = 'GPL3'
 __maintainer__ = 'Donovan Parks'
 __email__ = 'donovan.parks@gmail.com'
 
+import os
 import sys
 import gzip
 import traceback
+import exceptions as exception
+
+
+class InputFileException(exception.Exception):
+    pass
+
+
+def read(seq_file):
+    """Read sequences from fasta/q file.
+
+    Parameters
+    ----------
+    seq_file : str
+        Name of fasta/q file to read.
+
+    Returns
+    -------
+    dict : dict[seq_id] -> seq
+        Sequences indexed by sequence id.
+    """
+    if seq_file.endswith(('.fq.gz', '.fastq.gz', '.fq', '.fq.gz')):
+        return read_fastq(seq_file)
+    else:
+        return read_fasta(seq_file)
 
 
 def read_fasta(fasta_file):
@@ -40,6 +65,13 @@ def read_fasta(fasta_file):
     dict : dict[seq_id] -> seq
         Sequences indexed by sequence id.
     """
+
+    if not os.path.exists(fasta_file):
+        raise InputFileException
+
+    if os.stat(fasta_file).st_size == 0:
+        return
+
     try:
         open_file = open
         if fasta_file.endswith('.gz'):
@@ -81,6 +113,13 @@ def read_fastq(fastq_file):
     dict : dict[seq_id] -> seq
         Sequences indexed by sequence id.
     """
+
+    if not os.path.exists(fastq_file):
+        raise InputFileException
+
+    if os.stat(fastq_file).st_size == 0:
+        return
+
     try:
         open_file = open
         if fastq_file.endswith('.gz'):
@@ -106,16 +145,51 @@ def read_fastq(fastq_file):
     return seqs
 
 
+def read_seq(seq_file):
+    """Generator function to read sequences from fasta/q file.
+
+    This function is intended to be used as a generator
+    in order to avoid having to have large sequence files
+    in memory. Input file may be gzipped and in either
+    fasta or fastq format. It is slightly more efficient
+    to directly call read_fasta_seq() or read_fastq_seq()
+    if the type of input file in known.
+
+    Example:
+    seq_io = SeqIO()
+    for seq_id, seq in seq_io.read_seq(fasta_file):
+        print seq_id
+        print seq
+
+    Parameters
+    ----------
+    seq_file : str
+        Name of fasta/q file to read.
+
+    Yields
+    ------
+    list : [seq_id, seq]
+        Unique id of the sequence followed by the sequence itself.
+    """
+
+    if seq_file.endswith(('.fq.gz', '.fastq.gz', '.fq', '.fq.gz')):
+        for rtn in read_fastq_seq(seq_file):
+            yield rtn
+    else:
+        for rtn in read_fasta_seq(seq_file):
+            yield rtn
+
+
 def read_fasta_seq(fasta_file):
     """Generator function to read sequences from fasta file.
 
     This function is intended to be used as a generator
     in order to avoid having to have large sequence files
-    in memory.
+    in memory. Input file may be gzipped.
 
     Example:
     seq_io = SeqIO()
-    for seq_id, seq in seq_io.read_seq(fasta_file):
+    for seq_id, seq in seq_io.read_fasta_seq(fasta_file):
         print seq_id
         print seq
 
@@ -129,6 +203,13 @@ def read_fasta_seq(fasta_file):
     list : [seq_id, seq]
         Unique id of the sequence followed by the sequence itself.
     """
+
+    if not os.path.exists(fasta_file):
+        raise InputFileException
+
+    if os.stat(fasta_file).st_size == 0:
+        return
+
     try:
         open_file = open
         if fasta_file.endswith('.gz'):
@@ -164,11 +245,11 @@ def read_fastq_seq(fastq_file):
 
     This function is intended to be used as a generator
     in order to avoid having to have large sequence files
-    in memory.
+    in memory. Input file may be gzipped.
 
     Example:
     seq_io = SeqIO()
-    for seq_id, seq in seq_io.read_seq(fastq_file):
+    for seq_id, seq in seq_io.read_fastq_seq(fastq_file):
         print seq_id
         print seq
 
@@ -182,6 +263,13 @@ def read_fastq_seq(fastq_file):
     list : [seq_id, seq]
         Unique id of the sequence followed by the sequence itself.
     """
+
+    if not os.path.exists(fastq_file):
+        raise InputFileException
+
+    if os.stat(fastq_file).st_size == 0:
+        return
+
     try:
         open_file = open
         if fastq_file.endswith('.gz'):
@@ -220,8 +308,13 @@ def extract_seqs(fasta_file, seqs_to_extract):
         Dictionary of sequences indexed by sequence id.
     """
 
-    seqs = {}
+    if not os.path.exists(fasta_file):
+        raise InputFileException
 
+    if os.stat(fasta_file).st_size == 0:
+        return
+
+    seqs = {}
     for line in open(fasta_file):
         if line[0] == '>':
             seq_id = line[1:].partition(' ')[0]
@@ -252,6 +345,13 @@ def seq_lengths(fasta_file):
     dict : d[seq_id] -> length
         Length of each sequence.
     """
+
+    if not os.path.exists(fasta_file):
+        raise InputFileException
+
+    if os.stat(fasta_file).st_size == 0:
+        return
+
     lens = {}
     for seq_id, seq in read_fasta_seq(fasta_file):
         lens[seq_id] = len(seq)

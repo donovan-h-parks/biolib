@@ -100,7 +100,7 @@ def alphanumeric_sort(l):
 
 def check_file_exists(input_file):
     """Check if file exists."""
-    if not os.path.exists(input_file) and os.path.isfile(input_file):
+    if not os.path.exists(input_file) or not os.path.isfile(input_file):
         logger = logging.getLogger()
         logger.error('  [Error] Input file does not exists: ' + input_file + '\n')
         sys.exit()
@@ -108,7 +108,7 @@ def check_file_exists(input_file):
 
 def check_dir_exists(input_dir):
     """Check if directory exists."""
-    if not os.path.exists(input_dir) and os.path.isdir(input_dir):
+    if not os.path.exists(input_dir) or not os.path.isdir(input_dir):
         logger = logging.getLogger()
         logger.error('  [Error] Input directory does not exists: ' + input_dir + '\n')
         sys.exit()
@@ -129,7 +129,7 @@ def remove_extension(filename, extension=None):
     """Remove extension from filename.
 
     A specific extension can be specified, otherwise
-    the extesion is taken as all characters after the
+    the extension is taken as all characters after the
     last period.
     """
     f = ntpath.basename(filename)

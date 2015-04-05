@@ -22,6 +22,15 @@ __license__ = 'GPL3'
 __maintainer__ = 'Donovan Parks'
 __email__ = 'donovan.parks@gmail.com'
 
+import logging
+from collections import defaultdict
+
+"""
+To do:
+ 1. There is a serious hack in taxonomic_consistency which should be resolved, but
+     requires the viral and plasmid phylogenies to be taxonomically consistent.
+"""
+
 
 class InvalidTaxonomy(Exception):
     """Exception thrown for invalid taxonomy string."""
@@ -40,6 +49,9 @@ class Taxonomy(object):
 
     def __init__(self):
         """Initialization."""
+
+        self.logger = logging.getLogger()
+
         self.rank_prefixes = ('d__', 'p__', 'c__', 'o__', 'f__', 'g__', 's__')
         self.rank_labels = ('domain', 'phylum', 'class', 'order', 'family', 'genus', 'species')
         self.rank_index = {'d__': 0, 'p__': 1, 'c__': 2, 'o__': 3, 'f__': 4, 'g__': 5, 's__': 6}
@@ -98,10 +110,14 @@ class Taxonomy(object):
 
         taxa = [x.strip() for x in tax_str.split(';')]
         if len(taxa) != len(self.rank_prefixes):
+            self.logger.error('[Error] Taxonomy string contains too few ranks:')
+            self.logger.error('[Error] %s' % str(taxa))
             return False
 
-        for rank, taxon in taxa:
-            if taxon[0:3] != self.rank_prefixes[rank]:
+        for r, taxon in enumerate(taxa):
+            if taxon[0:3] != self.rank_prefixes[r]:
+                self.logger.error('[Error] Taxon is not prefixed with the expected rank, %s.:' % self.rank_prefixes[r])
+                self.logger.error('[Error] %s' % str(taxa))
                 return False
 
         return True
@@ -137,7 +153,44 @@ class Taxonomy(object):
 
         return ';'.join(new_tax)
 
-    def read(self, taxonomy_file, validate=False):
+    def taxonomic_consistency(self, taxonomy):
+        """Determine taxonomically consistent classification for taxa at each rank.
+
+        Parameters
+        ----------
+        taxonomy : dict[ref_genome_id] -> [domain, phylum, ..., species]
+            Taxonomic assignment of each reference genome.
+
+        Returns
+        -------
+        dict : d[taxa] -> expected pararent
+            Expected parent taxa for taxa at all taxonomic ranks.
+        """
+
+        expected_parent = defaultdict(lambda: dict)
+        for genome_id, taxa in taxonomy.iteritems():
+            if taxa[0] == 'd__Viruses' or '[P]' in taxa[0]:
+                # *** This is a HACK. It would be far better to enforce
+                # a taxonomically consistent taxonomy, but
+                # the viral taxonomy at IMG is currently not consistent
+                continue
+
+            for r in xrange(1, len(taxa)):
+                if taxa[r] == self.rank_prefixes[r]:
+                    break
+
+                if taxa[r] in expected_parent:
+                    if taxa[r - 1] != expected_parent[taxa[r]]:
+                        self.logger.error('[Error] Provided taxonomy in not taxonomically consistent.')
+                        self.logger.error('[Error] Genome %s indicates the parent of %s is %s.' % (genome_id, taxa[r], taxa[r - 1]))
+                        self.logger.error('[Error] The parent of this taxa was previously indicated as %s.' % (expected_parent[taxa[r]]))
+                        # raise InvalidTaxonomy("Invalid taxonomy string: %s" % ';'.join(taxa))
+
+                expected_parent[taxa[r]] = taxa[r - 1]
+
+        return expected_parent
+
+    def read(self, taxonomy_file, validate=True):
         """Read Greengenes-style taxonomy file.
 
         Expected format is:
@@ -155,7 +208,7 @@ class Taxonomy(object):
 
         Returns
         -------
-        dict : d[unique_id] -> taxonomy string
+        dict : d[unique_id] -> [d__<taxa>; ...; s__<taxa>]
             Taxonomy strings indexed by unique ids.
 
         Exceptions
@@ -179,6 +232,9 @@ class Taxonomy(object):
             if validate and not self.check_full(tax_str):
                 raise InvalidTaxonomy("Invalid taxonomy string: %s" % tax_str)
 
-            d[unique_id] = tax_str
+            d[unique_id] = tax_str.split(';')
+
+        if validate:
+            self.taxonomic_consistency((d))
 
         return d
