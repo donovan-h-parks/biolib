@@ -22,7 +22,7 @@ __license__ = 'GPL3'
 __maintainer__ = 'Donovan Parks'
 __email__ = 'donovan.parks@gmail.com'
 
-
+import sys
 from collections import namedtuple
 
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
@@ -48,15 +48,7 @@ class AbstractPlot(FigureCanvas):
             Options = namedtuple('Options', 'width height font_size dpi')
             self.options = Options(6, 6, 10, 300)
 
-        # Global plot settings
-        mpl.rcParams['font.size'] = self.options.font_size
-        mpl.rcParams['axes.titlesize'] = self.options.font_size
-        mpl.rcParams['axes.labelsize'] = self.options.font_size
-        mpl.rcParams['xtick.labelsize'] = self.options.font_size
-        mpl.rcParams['ytick.labelsize'] = self.options.font_size
-        mpl.rcParams['legend.fontsize'] = self.options.font_size
-        mpl.rcParams['svg.fonttype'] = 'none'
-
+        self.set_font_size(options.font_size)
         self.fig = Figure(facecolor='white', dpi=self.options.dpi)
 
         FigureCanvas.__init__(self, self.fig)
@@ -66,7 +58,17 @@ class AbstractPlot(FigureCanvas):
         self.type = '<none>'
         self.name = '<none>'
 
-        self.axesColour = (0.5, 0.5, 0.5)
+        self.axes_colour = (0.5, 0.5, 0.5)
+
+    def set_font_size(self, size):
+        """Set font size for all text elements."""
+        mpl.rcParams['font.size'] = size
+        mpl.rcParams['axes.titlesize'] = size
+        mpl.rcParams['axes.labelsize'] = size
+        mpl.rcParams['xtick.labelsize'] = size
+        mpl.rcParams['ytick.labelsize'] = size
+        mpl.rcParams['legend.fontsize'] = size
+        mpl.rcParams['svg.fonttype'] = 'none'
 
     def save_plot(self, filename, dpi=300):
         """Save plot to file."""
@@ -76,6 +78,70 @@ class AbstractPlot(FigureCanvas):
             self.fig.savefig(filename, format=imgFormat, dpi=dpi, facecolor='white', edgecolor='white', bbox_inches='tight')
         else:
             pass
+
+    def save_html(self, output_html, html_script=None, html_body=None):
+        """Save figure as HTML.
+
+        Parameters
+        ----------
+        output_html : str
+            Name of output file.
+        html_script : str
+            Additional java script to append to script section.
+        html_body : str
+            Additional HTML to append to end of the body section.
+        """
+
+        try:
+            __import__('mpld3')
+        except ImportError:
+            print '[Error] The mpld3 module is required to save HTML figures.'
+            sys.exit()
+
+        import mpld3
+
+        # modify figure properties for better web viewing
+        self.fig.dpi = 96
+        html_str = mpld3.fig_to_html(self.fig, template_type='simple')
+
+        if html_script:
+            html_script_start = html_str.find('<script type="text/javascript">') + len('<script type="text/javascript">')
+            html_str = html_str[0:html_script_start] + '\n' + html_script + '\n' + html_str[html_script_start:]
+
+        if html_body:
+            html_str += '\n<body>\n' + html_body + '\n</body>\n'
+
+        html_str = '<center>' + html_str + '</center>'
+
+        fout = open(output_html, 'w')
+        fout.write(html_str)
+        fout.close()
+
+        # restore figure properties
+        self.fig.dpi = self.options.dpi
+
+    def prettify(self, axis):
+        """Modify axis properties to make a cleaner plot."""
+
+        for a in axis.yaxis.majorTicks:
+            a.tick1On = True
+            a.tick2On = False
+
+        for a in axis.xaxis.majorTicks:
+            a.tick1On = True
+            a.tick2On = False
+
+        for line in axis.yaxis.get_ticklines():
+            line.set_color(self.axes_colour)
+
+        for line in axis.xaxis.get_ticklines():
+            line.set_color(self.axes_colour)
+
+        for loc, spine in axis.spines.iteritems():
+            if loc in ['right', 'top']:
+                spine.set_color('none')
+            else:
+                spine.set_color(self.axes_colour)
 
     def label_extents(self, xLabels, xFontSize, xRotation, yLabels, yFontSize, yRotation):
         """Get maximum extents of labels."""
@@ -109,6 +175,8 @@ class AbstractPlot(FigureCanvas):
         return xLabelBounds, yLabelBounds
 
     def x_label_extents(self, labels, fontSize, rotation=0):
+        """Get maximum extents of x-axis labels."""
+
         self.fig.clear()
 
         tempAxes = self.fig.add_axes([0, 0, 1.0, 1.0])
@@ -127,6 +195,8 @@ class AbstractPlot(FigureCanvas):
         return xLabelBounds
 
     def y_label_extents(self, labels, fontSize, rotation=0):
+        """Get maximum extents of y-axis labels."""
+
         self.fig.clear()
 
         tempAxes = self.fig.add_axes([0, 0, 1.0, 1.0])
@@ -145,6 +215,8 @@ class AbstractPlot(FigureCanvas):
         return yLabelBounds
 
     def format_labels(self, labels):
+        """Make labels friendly to humans."""
+
         formattedLabels = []
         for label in labels:
             value = float(label.get_text())
@@ -162,6 +234,8 @@ class AbstractPlot(FigureCanvas):
         return formattedLabels
 
     def remove_extra_zeros(self, label):
+        """Remove unncessary trailing zeros from labels."""
+
         if '.' in label:
             while label[-1] == '0':
                 label = label[0:-1]
@@ -173,6 +247,7 @@ class AbstractPlot(FigureCanvas):
 
     def bounding_box(self, data, ax, label, bBoundingBoxes, bLabels):
         """Draw bounding box around data."""
+
         data = np.array(data)
 
         width = max(data[:, 0]) - min(data[:, 0])

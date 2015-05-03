@@ -64,13 +64,13 @@ class FastTree():
 
         if seq_type.upper() == 'PROT':
             seq_type_str = ''
+            if model_str.upper() == 'JTT':
+                model_str = ''
+            elif model_str.upper() == 'WAG':
+                model_str = '-wag'
         elif seq_type.upper() == 'NT':
             seq_type_str = '-nt'
-
-        if model_str.upper() == 'JTT':
-            model_str = ''
-        elif model_str.upper() == 'WAG':
-            model_str = '-wag'
+            model_str = '-gtr'
 
         if not log_file:
             log_file = '/dev/null'

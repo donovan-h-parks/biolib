@@ -26,9 +26,10 @@ import os
 import logging
 import tempfile
 import shutil
+import ntpath
 from collections import defaultdict, namedtuple
 
-from biolib.common import check_file_exists, remove_extension
+from biolib.common import check_file_exists, remove_extension, make_sure_path_exists
 from biolib.seq_io import read_fasta
 from biolib.parallel import Parallel
 from biolib.external.execute import check_on_path
@@ -68,8 +69,8 @@ class Prodigal(object):
 
         genome_id = remove_extension(genome_file)
 
-        aa_gene_file = os.path.join(self.output_dir, genome_id + '.genes.faa')
-        nt_gene_file = os.path.join(self.output_dir, genome_id + '.genes.fna')
+        aa_gene_file = os.path.join(self.output_dir, genome_id + '_genes.faa')
+        nt_gene_file = os.path.join(self.output_dir, genome_id + '_genes.fna')
         gff_file = os.path.join(self.output_dir, genome_id + '.gff')
 
         best_translation_table = -1
@@ -94,8 +95,8 @@ class Prodigal(object):
 
             for translation_table in translation_tables:
                 os.makedirs(os.path.join(tmp_dir, str(translation_table)))
-                aa_gene_file_tmp = os.path.join(tmp_dir, str(translation_table), genome_id + '.genes.faa')
-                nt_gene_file_tmp = os.path.join(tmp_dir, str(translation_table), genome_id + '.genes.fna')
+                aa_gene_file_tmp = os.path.join(tmp_dir, str(translation_table), genome_id + '_genes.faa')
+                nt_gene_file_tmp = os.path.join(tmp_dir, str(translation_table), genome_id + '_genes.fna')
                 gff_file_tmp = os.path.join(tmp_dir, str(translation_table), genome_id + '.gff')
 
                 # check if there is sufficient bases to calculate prodigal parameters
@@ -130,8 +131,8 @@ class Prodigal(object):
             else:
                 best_translation_table = self.translation_table
 
-            shutil.copyfile(os.path.join(tmp_dir, str(best_translation_table), genome_id + '.genes.faa'), aa_gene_file)
-            shutil.copyfile(os.path.join(tmp_dir, str(best_translation_table), genome_id + '.genes.fna'), nt_gene_file)
+            shutil.copyfile(os.path.join(tmp_dir, str(best_translation_table), genome_id + '_genes.faa'), aa_gene_file)
+            shutil.copyfile(os.path.join(tmp_dir, str(best_translation_table), genome_id + '_genes.fna'), nt_gene_file)
             shutil.copyfile(os.path.join(tmp_dir, str(best_translation_table), genome_id + '.gff'), gff_file)
 
             # clean up temporary files
@@ -199,7 +200,7 @@ class Prodigal(object):
         genome_files : list of str
             Nucleotide fasta files to call genes on.
         called_genes : boolean
-            Flag indicating genes are already called.
+            Flag indicating if genes are already called.
         translation_table : int
             Specifies desired translation table, use None to automatically
             select between tables 4 and 11.
@@ -221,14 +222,20 @@ class Prodigal(object):
         self.meta = meta
         self.output_dir = output_dir
 
+        make_sure_path_exists(self.output_dir)
+
         progress_func = None
         if self.verbose:
             file_type = 'genomes'
             self.progress_str = '    Finished processing %d of %d (%.2f%%) genomes.'
             if meta:
                 file_type = 'scaffolds'
+                if len(genome_files):
+                    file_type = ntpath.basename(genome_files[0])
+
                 self.progress_str = '    Finished processing %d of %d (%.2f%%) files.'
 
+            self.logger.info('')
             self.logger.info('  Identifying genes within %s:' % file_type)
             progress_func = self._progress
 

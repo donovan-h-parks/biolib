@@ -160,10 +160,10 @@ class GenomicSignature(object):
         float
             Manhattan distance between signatures.
         """
-        return np.sum(np.abs(sig1 - sig2))
+        return np.sum(np.abs(np.array(sig1) - np.array(sig2)))
 
     def read(self, kmer_profile_file):
-        """Read genomic signatures..
+        """Read genomic signatures.
 
         Parameters
         ----------
@@ -172,7 +172,7 @@ class GenomicSignature(object):
 
         Returns
         -------
-        dict : d[kmer] -> count
+        dict : d[seq_id] -> counts in canonical order
             Count of each kmer.
         """
 

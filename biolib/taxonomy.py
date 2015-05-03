@@ -32,11 +32,6 @@ To do:
 """
 
 
-class InvalidTaxonomy(Exception):
-    """Exception thrown for invalid taxonomy string."""
-    pass
-
-
 class Taxonomy(object):
     """Manipulation of Greengenes-style taxonomy files and strings.
 
@@ -46,15 +41,22 @@ class Taxonomy(object):
 
     Spaces after the semi-colons are optional.
     """
+    
+    rank_prefixes = ('d__', 'p__', 'c__', 'o__', 'f__', 'g__', 's__')
+    rank_labels = ('domain', 'phylum', 'class', 'order', 'family', 'genus', 'species')
+    rank_index = {'d__': 0, 'p__': 1, 'c__': 2, 'o__': 3, 'f__': 4, 'g__': 5, 's__': 6}
+    
+    unclassified_rank = 'unclassified'
+    
+    unclassified_taxon = []
+    for p in rank_prefixes:
+        unclassified_taxon.append(p + unclassified_rank)
+    unclassified_taxon = ';'.join(unclassified_taxon)
 
     def __init__(self):
         """Initialization."""
 
         self.logger = logging.getLogger()
-
-        self.rank_prefixes = ('d__', 'p__', 'c__', 'o__', 'f__', 'g__', 's__')
-        self.rank_labels = ('domain', 'phylum', 'class', 'order', 'family', 'genus', 'species')
-        self.rank_index = {'d__': 0, 'p__': 1, 'c__': 2, 'o__': 3, 'f__': 4, 'g__': 5, 's__': 6}
 
     def taxa(self, tax_str):
         """Taxa specified by taxonomy string.
@@ -92,7 +94,7 @@ class Taxonomy(object):
 
         d = {}
         for rank, taxon in enumerate(taxa):
-            d[self.rank_labels[rank]] = taxon
+            d[Taxonomy.rank_labels[rank]] = taxon
 
     def check_full(self, tax_str):
         """Check if taxonomy string specifies all expected ranks.
@@ -109,14 +111,14 @@ class Taxonomy(object):
         """
 
         taxa = [x.strip() for x in tax_str.split(';')]
-        if len(taxa) != len(self.rank_prefixes):
+        if len(taxa) != len(Taxonomy.rank_prefixes):
             self.logger.error('[Error] Taxonomy string contains too few ranks:')
             self.logger.error('[Error] %s' % str(taxa))
             return False
 
         for r, taxon in enumerate(taxa):
-            if taxon[0:3] != self.rank_prefixes[r]:
-                self.logger.error('[Error] Taxon is not prefixed with the expected rank, %s.:' % self.rank_prefixes[r])
+            if taxon[0:3] != Taxonomy.rank_prefixes[r]:
+                self.logger.error('[Error] Taxon is not prefixed with the expected rank, %s.:' % Taxonomy.rank_prefixes[r])
                 self.logger.error('[Error] %s' % str(taxa))
                 return False
 
@@ -144,7 +146,7 @@ class Taxonomy(object):
 
         new_tax = []
         cur_taxa_index = 0
-        for rank_prefix in self.rank_prefixes:
+        for rank_prefix in Taxonomy.rank_prefixes:
             if taxa[cur_taxa_index][0:3] == rank_prefix:
                 cur_taxa_index.append(taxa[cur_taxa_index])
                 cur_taxa_index += 1
@@ -158,13 +160,14 @@ class Taxonomy(object):
 
         Parameters
         ----------
-        taxonomy : dict[ref_genome_id] -> [domain, phylum, ..., species]
-            Taxonomic assignment of each reference genome.
+        taxonomy : d[unique_id] -> [d__<taxon>; ...; s__<taxon>]
+            Taxonomy strings indexed by unique ids.
 
         Returns
         -------
-        dict : d[taxa] -> expected pararent
-            Expected parent taxa for taxa at all taxonomic ranks.
+        dict : d[taxa] -> expected parent
+            Expected parent taxon for taxa at all taxonomic ranks, or
+            None if the taxonomy is consistent.
         """
 
         expected_parent = defaultdict(lambda: dict)
@@ -176,21 +179,52 @@ class Taxonomy(object):
                 continue
 
             for r in xrange(1, len(taxa)):
-                if taxa[r] == self.rank_prefixes[r]:
+                if taxa[r] == Taxonomy.rank_prefixes[r]:
                     break
 
                 if taxa[r] in expected_parent:
                     if taxa[r - 1] != expected_parent[taxa[r]]:
-                        self.logger.error('[Error] Provided taxonomy in not taxonomically consistent.')
+                        self.logger.error('[Error] Provided taxonomy is not taxonomically consistent.')
                         self.logger.error('[Error] Genome %s indicates the parent of %s is %s.' % (genome_id, taxa[r], taxa[r - 1]))
                         self.logger.error('[Error] The parent of this taxa was previously indicated as %s.' % (expected_parent[taxa[r]]))
-                        # raise InvalidTaxonomy("Invalid taxonomy string: %s" % ';'.join(taxa))
+                        return None
 
                 expected_parent[taxa[r]] = taxa[r - 1]
 
         return expected_parent
+    
+    def validate(self, taxonomy):
+        """Check if taxonomy forms a strict hierarhcy.
 
-    def read(self, taxonomy_file, validate=True):
+        Parameters
+        ----------
+        taxonomy : d[unique_id] -> [d__<taxon>; ...; s__<taxon>]
+            Taxonomy strings indexed by unique ids.
+
+        Returns
+        -------
+        boolean
+            True is taxonomy is valid, otherwise False
+        """
+        
+        for unique_id, taxa in taxonomy.iteritems():
+            if len(taxa) != len(Taxonomy.rank_prefixes):
+                self.logger.error('[Error] Taxonomy contains too few ranks:')
+                self.logger.error('[Error] %s\t%s' % (unique_id, taxa))
+                return False
+
+            for r, taxon in enumerate(taxa):
+                if taxon[0:3] != Taxonomy.rank_prefixes[r]:
+                    self.logger.error('[Error] Taxon is not prefixed with the expected rank, %s.:' % Taxonomy.rank_prefixes[r])
+                    self.logger.error('[Error] %s\t%s' % (unique_id, taxon))
+                    return False
+
+        if not self.taxonomic_consistency(taxonomy):
+            return False
+
+        return True
+
+    def read(self, taxonomy_file):
         """Read Greengenes-style taxonomy file.
 
         Expected format is:
@@ -203,19 +237,11 @@ class Taxonomy(object):
         ----------
         taxonomy_file : str
             Greengenes-style taxonomy file.
-        validate : boolean
-            Check if all taxonomy strings are valid.
 
         Returns
         -------
-        dict : d[unique_id] -> [d__<taxa>; ...; s__<taxa>]
+        dict : d[unique_id] -> [d__<taxon>; ...; s__<taxon>]
             Taxonomy strings indexed by unique ids.
-
-        Exceptions
-        ----------
-        InvalidTaxonomy
-            Thrown if validate is True and an invalid
-            taxonomy string is encountered.
         """
 
         d = {}
@@ -229,12 +255,6 @@ class Taxonomy(object):
                 # appear in Greengenes-style taxonomy files
                 tax_str = tax_str[0:-1]
 
-            if validate and not self.check_full(tax_str):
-                raise InvalidTaxonomy("Invalid taxonomy string: %s" % tax_str)
-
             d[unique_id] = tax_str.split(';')
-
-        if validate:
-            self.taxonomic_consistency((d))
 
         return d

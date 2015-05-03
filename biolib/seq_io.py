@@ -32,18 +32,19 @@ import exceptions as exception
 class InputFileException(exception.Exception):
     pass
 
-    
-protein_bases = {'a','r','n','d','c','q','e','g','h','i','l','k','m','f','p','s','t','w','y','v'}
-nucleotide_bases {'a','c','g','t'}
+
+protein_bases = {'a', 'r', 'n', 'd', 'c', 'q', 'e', 'g', 'h', 'i', 'l', 'k', 'm', 'f', 'p', 's', 't', 'w', 'y', 'v'}
+nucleotide_bases = {'a', 'c', 'g', 't'}
 insertion_bases = {'-', '.'}
-    
+
+
 def is_nucleotide(seq_file, req_perc=0.95, max_seqs_to_read=10):
     """Check if a file contains sequences in nucleotide space.
-    
+
     The check is performed by looking for the characters in
     {a,c,g,t,n,.,-} and confirming that these comprise the
     majority of a sequences. A set number of sequences are
-    read and the file assumed to be not be in nucleotide space 
+    read and the file assumed to be not be in nucleotide space
     if none of these sequences are comprised primarily of the
     defined nucleotide set.
 
@@ -52,39 +53,45 @@ def is_nucleotide(seq_file, req_perc=0.95, max_seqs_to_read=10):
     seq_file : str
         Name of fasta/q file to read.
     req_perc : float
-        Percentage of bases in {a,c,g,t,n,.,-} before 
-        declaring the sequences as being in nucleotide 
+        Percentage of bases in {a,c,g,t,n,.,-} before
+        declaring the sequences as being in nucleotide
         space.
     max_seqs_to_read : int
-        Maximum sequences to read before declaring 
+        Maximum sequences to read before declaring
         sequence file to not be in nucleotide space.
 
     Returns
     -------
     boolean
-        True is sequences are in nucleotide space. 
+        True is sequences are in nucleotide space.
     """
-    
+
+    seq_count = 0
     for _seq_id, seq in read_seq(seq_file):
         seq = seq.lower()
-        
+
         nt_bases = 0
         for c in (nucleotide_bases | {'n'} | insertion_bases):
-            nt_bases = seq.count(c)
-            
+            nt_bases += seq.count(c)
+
         if float(nt_bases) / len(seq) >= req_perc:
             return True
-            
+
+        seq_count += 1
+        if seq_count == max_seqs_to_read:
+            break
+
     return False
+
 
 def is_protein(seq_file, req_perc=0.95, max_seqs_to_read=10):
     """Check if a file contains sequences in protein space.
-    
+
     The check is performed by looking for the 20 amino acids,
     along with X, and the insertion characters '-' and '.', in
-    order to confirm that these comprise the majority of a 
-    sequences. A set number of sequences are read and the file 
-    assumed to be not be in nucleotide space if none of these 
+    order to confirm that these comprise the majority of a
+    sequences. A set number of sequences are read and the file
+    assumed to be not be in nucleotide space if none of these
     sequences are comprised primarily of the defined nucleotide set.
 
     Parameters
@@ -92,31 +99,37 @@ def is_protein(seq_file, req_perc=0.95, max_seqs_to_read=10):
     seq_file : str
         Name of fasta/q file to read.
     req_perc : float
-        Percentage of amino acid bases before 
-        declaring the sequences as being in nucleotide 
+        Percentage of amino acid bases before
+        declaring the sequences as being in nucleotide
         space.
     max_seqs_to_read : int
-        Maximum sequences to read before declaring 
-        sequence file to not be in nucleotide space.
+        Maximum sequences to read before declaring
+        sequence file to not be in amino acid space.
 
     Returns
     -------
     boolean
-        True is sequences are in protein space. 
+        True is sequences are in protein space.
     """
-    
+
+    seq_count = 0
     for _seq_id, seq in read_seq(seq_file):
         seq = seq.lower()
-        
+
         prot_bases = 0
         for c in (protein_bases | {'x'} | insertion_bases):
-            prot_bases = seq.count(c)
-            
+            prot_bases += seq.count(c)
+
         if float(prot_bases) / len(seq) >= req_perc:
             return True
-            
+
+        seq_count += 1
+        if seq_count == max_seqs_to_read:
+            break
+
     return False
-    
+
+
 def read(seq_file):
     """Read sequences from fasta/q file.
 
@@ -317,6 +330,8 @@ def read_fasta_seq(fasta_file):
 
         # report last sequence
         yield seq_id, ''.join(seq)
+    except GeneratorExit:
+        pass
     except:
         print traceback.format_exc()
         print ''
@@ -369,6 +384,8 @@ def read_fastq_seq(fastq_file):
                 yield seq_id, line[0:-1]
             elif line_num == 4:
                 line_num = 0
+    except GeneratorExit:
+        pass
     except:
         print traceback.format_exc()
         print ''

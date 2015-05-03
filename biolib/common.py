@@ -30,10 +30,13 @@ import ntpath
 import re
 import gzip
 
+from numpy import (abs as np_abs,
+                   array as np_array)
+
 
 def query_yes_no(question, default="yes"):
     """Ask a yes/no question via raw_input() and return their answer.
-    
+
     http://stackoverflow.com/questions/3041986/python-command-line-yes-no-input
 
     Parameters
@@ -72,6 +75,7 @@ def query_yes_no(question, default="yes"):
             sys.stdout.write("Please respond with 'yes' or 'no' "
                              "(or 'y' or 'n').\n")
 
+
 def is_float(s):
     """Check if a string can be converted to a float.
 
@@ -93,6 +97,26 @@ def is_float(s):
 
     return True
 
+
+
+def find_nearest(array, value):
+    """Find nearest array element to a given value.
+
+    Parameters
+    ----------
+    array : iterable
+        List of values.
+    value : float
+        Target value
+
+    Returns
+    -------
+    array element
+        Closest element in 'array' to 'value'.
+
+    """
+    idx = (np_abs(np_array(array) - value)).argmin()
+    return array[idx]
 
 def concatenate_files(input_files, output_file):
     """Concatenate several files into a single file.
@@ -157,6 +181,12 @@ def check_dir_exists(input_dir):
 
 def make_sure_path_exists(path):
     """Create directory if it does not exist."""
+    
+    if not path:
+        # lack of a path qualifier is acceptable as this
+        # simply specifies the current directory
+        return
+    
     try:
         os.makedirs(path)
     except OSError as exception:
