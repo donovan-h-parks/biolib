@@ -25,6 +25,7 @@ __status__ = "Development"
 
 import os
 import logging
+from collections import namedtuple
 
 from biolib.external.execute import check_on_path
 
@@ -55,9 +56,19 @@ class Blast():
         self.cpus = cpus
 
         self.output_fmt = {'standard': '6',
-                            'custom': '6 qseqid qlen sseqid slen length pident evalue bitscore'}
+                            'custom': '6 qseqid qlen sseqid stitle slen length pident evalue bitscore'}
+        self.blastp_tasks = {'blastp', 'blastp-fast', 'blastp-short'}
 
-    def blastp(self, query_seqs, prot_db, evalue, output_fmt, output_file):
+        self.BlastHit = namedtuple('BlastHit', """query_id
+                                                subject_id
+                                                subject_annotation
+                                                perc_identity
+                                                query_perc_aln_len
+                                                subject_perc_aln_len
+                                                evalue
+                                                bitscore""")
+
+    def blastp(self, query_seqs, prot_db, output_file, evalue=1e-3, max_matches=500, output_fmt='standard', task='blastp'):
         """Apply blastp to query file.
 
         Finds homologs to query sequences using blastp homology search
@@ -72,15 +83,79 @@ class Blast():
             File containing query sequences.
         prot_db : str
             File containing blastp formatted database.
-        evalue : float
-            E-value threshold used to identify homologs.
-        output_fmt : str
-            Specified output format of blast table: standard or custom.
         output_file : str
             Output file containing blastp results.
+        evalue : float
+            E-value threshold used to identify homologs.
+        max_matches : int
+            Maximum hits per query sequence.
+        output_fmt : str
+            Specified output format of blast table: standard or custom.
         """
+
+        assert(output_fmt in self.output_fmt.keys())
+        assert(task in self.blastp_tasks)
 
         cmd = "blastp -num_threads %d" % self.cpus
         cmd += " -query %s -db %s -out %s -evalue %g" % (query_seqs, prot_db, output_file, evalue)
-        cmd += " -outfmt %s" % self.output_fmt[output_fmt]
+        cmd += " -max_target_seqs %d" % max_matches
+        cmd += " -task %s" % task
+        cmd += " -outfmt '%s'" % self.output_fmt[output_fmt]
         os.system(cmd)
+
+    def identify_homologs(self,
+                          custom_blast_table,
+                          evalue_threshold,
+                          perc_identity_threshold,
+                          perc_aln_len_threshold,
+                          output_fmt):
+        """Identify homologs among blast hits based on specified criteria.
+
+        Parameters
+        ----------
+        custom_blast_table : str
+            File containing blast hits in the custom tabular format.
+        evalue_threshold : float
+            E-value threshold used to define homologs.
+        perc_identity_threshold : float
+            Percent identity threshold used to define a homologs.
+        perc_aln_len_threshold : float
+            Alignment length threshold used to define a homologs.
+
+        Returns
+        -------
+        dict : d[query_id] -> BlastHit named tuple
+            Dictionary with information about blast hits to homologs.
+        """
+
+        homologs = {}
+        for line in open(custom_blast_table):
+            line_split = line.split('\t')
+
+            query_id = line_split[0]
+            query_len = int(line_split[1])
+            subject_id = line_split[2]
+            subject_title = line_split[3]
+            subject_len = int(line_split[4])
+            align_len = int(line_split[5])
+            perc_identity = float(line_split[6])
+            evalue = float(line_split[7])
+            bitscore = float(line_split[8])
+
+            if evalue <= evalue_threshold and perc_identity >= perc_identity_threshold:
+                query_perc_aln_len = align_len * 100.0 / query_len
+                subject_perc_aln_len = align_len * 100.0 / subject_len
+
+                if query_perc_aln_len >= perc_aln_len_threshold and subject_perc_aln_len >= perc_aln_len_threshold:
+                    prev_hit = homologs.get(subject_id, None)
+                    if not prev_hit or prev_hit.bitscore < bitscore:
+                        homologs[subject_id] = self.BlastHit(query_id=query_id,
+                                                                subject_id=subject_id,
+                                                                subject_annotation=subject_title,
+                                                                perc_identity=perc_identity,
+                                                                query_perc_aln_len=query_perc_aln_len,
+                                                                subject_perc_aln_len=subject_perc_aln_len,
+                                                                evalue=evalue,
+                                                                bitscore=bitscore)
+
+        return homologs

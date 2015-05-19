@@ -41,13 +41,13 @@ class Taxonomy(object):
 
     Spaces after the semi-colons are optional.
     """
-    
+
     rank_prefixes = ('d__', 'p__', 'c__', 'o__', 'f__', 'g__', 's__')
     rank_labels = ('domain', 'phylum', 'class', 'order', 'family', 'genus', 'species')
     rank_index = {'d__': 0, 'p__': 1, 'c__': 2, 'o__': 3, 'f__': 4, 'g__': 5, 's__': 6}
-    
+
     unclassified_rank = 'unclassified'
-    
+
     unclassified_taxon = []
     for p in rank_prefixes:
         unclassified_taxon.append(p + unclassified_rank)
@@ -192,7 +192,7 @@ class Taxonomy(object):
                 expected_parent[taxa[r]] = taxa[r - 1]
 
         return expected_parent
-    
+
     def validate(self, taxonomy):
         """Check if taxonomy forms a strict hierarhcy.
 
@@ -206,7 +206,7 @@ class Taxonomy(object):
         boolean
             True is taxonomy is valid, otherwise False
         """
-        
+
         for unique_id, taxa in taxonomy.iteritems():
             if len(taxa) != len(Taxonomy.rank_prefixes):
                 self.logger.error('[Error] Taxonomy contains too few ranks:')
@@ -258,3 +258,19 @@ class Taxonomy(object):
             d[unique_id] = tax_str.split(';')
 
         return d
+
+    def write(self, taxonomy, output_file):
+        """Write Greengenes-style taxonomy file.
+
+        Parameters
+        ----------
+        taxonomy : d[unique_id] -> [d__<taxon>; ...; s__<taxon>]
+            Taxonomy strings indexed by unique ids.
+        output_file : str
+            Name of output file.
+        """
+
+        fout = open(output_file, 'w')
+        for genome_id, taxa in taxonomy.iteritems():
+            fout.write(genome_id + '\t' + ';'.join(taxa) + '\n')
+        fout.close()

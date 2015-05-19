@@ -149,13 +149,15 @@ def read(seq_file):
         return read_fasta(seq_file)
 
 
-def read_fasta(fasta_file):
+def read_fasta(fasta_file, keep_annotation=False):
     """Read sequences from fasta file.
 
     Parameters
     ----------
     fasta_file : str
         Name of fasta file to read.
+    keep_annotation : boolean
+        Determine is sequence id should contain annotation.
 
     Returns
     -------
@@ -181,7 +183,11 @@ def read_fasta(fasta_file):
                 continue
 
             if line[0] == '>':
-                seq_id = line[1:].split(None, 1)[0]
+                if keep_annotation:
+                    seq_id = line[1:-1]
+                else:
+                    seq_id = line[1:].split(None, 1)[0]
+
                 seqs[seq_id] = []
             else:
                 seqs[seq_id].append(line[0:-1])
@@ -242,7 +248,7 @@ def read_fastq(fastq_file):
     return seqs
 
 
-def read_seq(seq_file):
+def read_seq(seq_file, keep_annotation=False):
     """Generator function to read sequences from fasta/q file.
 
     This function is intended to be used as a generator
@@ -262,22 +268,25 @@ def read_seq(seq_file):
     ----------
     seq_file : str
         Name of fasta/q file to read.
+    keep_annotation : boolean
+        Determine if annotation string should be returned.
 
     Yields
     ------
-    list : [seq_id, seq]
-        Unique id of the sequence followed by the sequence itself.
+    list : [seq_id, seq, [annotation]]
+        Unique id of the sequence followed by the sequence itself,
+        and the annotation if keep_annotation is True.
     """
 
     if seq_file.endswith(('.fq.gz', '.fastq.gz', '.fq', '.fq.gz')):
         for rtn in read_fastq_seq(seq_file):
             yield rtn
     else:
-        for rtn in read_fasta_seq(seq_file):
+        for rtn in read_fasta_seq(seq_file, keep_annotation):
             yield rtn
 
 
-def read_fasta_seq(fasta_file):
+def read_fasta_seq(fasta_file, keep_annotation=False):
     """Generator function to read sequences from fasta file.
 
     This function is intended to be used as a generator
@@ -294,11 +303,14 @@ def read_fasta_seq(fasta_file):
     ----------
     fasta_file : str
         Name of fasta file to read.
+    keep_annotation : boolean
+        Determine if annotation string should be returned.
 
     Yields
     ------
-    list : [seq_id, seq]
-        Unique id of the sequence followed by the sequence itself.
+    list : [seq_id, seq, [annotation]]
+        Unique id of the sequence followed by the sequence itself,
+        and the annotation if keep_annotation is True.
     """
 
     if not os.path.exists(fasta_file):
@@ -313,6 +325,7 @@ def read_fasta_seq(fasta_file):
             open_file = gzip.open
 
         seq_id = None
+        annotation = None
         seq = None
         for line in open_file(fasta_file):
             # skip blank lines
@@ -321,15 +334,26 @@ def read_fasta_seq(fasta_file):
 
             if line[0] == '>':
                 if seq_id != None:
-                    yield seq_id, ''.join(seq)
+                    if keep_annotation:
+                        yield seq_id, ''.join(seq), annotation
+                    else:
+                        yield seq_id, ''.join(seq)
 
-                seq_id = line[1:].split(None, 1)[0]
+                line_split = line[1:-1].split(None, 1)
+                if len(line_split) == 2:
+                    seq_id, annotation = line_split
+                else:
+                    seq_id = line_split[0]
+                    annotation = None
                 seq = []
             else:
                 seq.append(line[0:-1])
 
         # report last sequence
-        yield seq_id, ''.join(seq)
+        if keep_annotation:
+            yield seq_id, ''.join(seq), annotation
+        else:
+            yield seq_id, ''.join(seq)
     except GeneratorExit:
         pass
     except:

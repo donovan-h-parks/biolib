@@ -29,7 +29,7 @@ import logging
 from biolib.external.execute import check_on_path
 
 
-class MuscleRunner():
+class Muscle():
     """Wrapper for running muscle."""
 
     def __init__(self):
@@ -53,4 +53,3 @@ class MuscleRunner():
 
         cmd = 'muscle -quiet -in %s -out %s -log %s' % (seqs, output_file, log_file)
         os.system(cmd)
-

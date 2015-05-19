@@ -55,12 +55,11 @@ def run(args):
     try:
         subprocess.check_output(args)
     except subprocess.CalledProcessError, e:
-        logger = logging.getLogger()
-        logger.error('[Error] Failed to execute:')
-        logger.error(e.cmd)
-        logger.error('')
-        logger.error('[Error] Program %s returned:' % args[0])
-        logger.error(e.output)
+        logging.error('Failed to execute:')
+        logging.error(e.cmd)
+        logging.error('')
+        logging.error('Program %s returned:' % args[0])
+        logging.error(e.output)
         sys.exit()
 
 
@@ -137,8 +136,7 @@ def check_on_path(program, exit_on_fail=True):
         return True
 
     if exit_on_fail:
-        logger = logging.getLogger()
-        logger.error('[Error] %s is not on the system path.' % program)
+        logging.error('%s is not on the system path.' % program)
         sys.exit()
 
     return False

@@ -157,7 +157,7 @@ def mean_length(seqs):
     total_len = 0
     for _seq_id, seq in seqs:
         total_len += len(seq)
-        
+
     return float(total_len) / len(seqs)
 
 
@@ -178,7 +178,7 @@ def max_length(seqs):
     longest_seq = 0
     for _seq_id, seq in seqs:
         longest_seq = max(longest_seq, len(seq))
-    
+
     return longest_seq
 
 
@@ -218,3 +218,58 @@ def fragment(seq, window_size, step_size):
         fragments.append(seq[start:])
 
     return fragments
+
+
+def trim_seqs(seqs, min_per_taxa, min_per_bp):
+    """Trim multiple sequence alignment.
+
+    Parameters
+    ----------
+    seqs : d[seq_id] -> sequence
+        Aligned sequences.
+    min_per_taxa : float
+        Minimum percentage of taxa required to retain a leading and trailing columns.
+    min_per_bp : float
+        Minimum percentage of base pairs required to keep trimmed sequence.
+
+    Returns
+    -------
+    dict : d[seq_id] -> sequence
+        Dictionary of trimmed sequences.
+    """
+
+    alignment_length = len(seqs.values()[0])
+
+    # count number of taxa represented in each column
+    column_count = [0] * alignment_length
+    for seq in seqs.values():
+        for i, ch in enumerate(seq):
+            if ch != '.' and ch != '-':
+                column_count[i] += 1
+
+    for i, count in enumerate(column_count):
+        if count >= min_per_taxa * len(seqs):
+            first_col_index = i
+            break
+
+    for i in xrange(alignment_length - 1, -1, -1):
+        if column_count[i] >= min_per_taxa * len(seqs):
+            last_col_index = min(i + 1, alignment_length)
+            break
+
+    # trim leading and trailing columns
+    output_seqs = {}
+    for seq_id, seq in seqs.iteritems():
+        seq = seq[first_col_index:last_col_index]
+
+        valid_bases = 0
+        for ch in seq:
+            if ch != '.' and ch != '-':
+                valid_bases += 1
+
+        if valid_bases < len(seq) * min_per_bp:
+            continue
+
+        output_seqs[seq_id] = seq
+
+    return output_seqs
