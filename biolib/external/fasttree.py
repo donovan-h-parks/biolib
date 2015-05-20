@@ -15,9 +15,6 @@
 #                                                                             #
 ###############################################################################
 
-import os
-import logging
-
 __author__ = "Donovan Parks"
 __copyright__ = "Copyright 2015"
 __credits__ = ["Donovan Parks"]
@@ -26,6 +23,14 @@ __maintainer__ = "Donovan Parks"
 __email__ = "donovan.parks@gmail.com"
 __status__ = "Development"
 
+import os
+import logging
+import shutil
+import tempfile
+
+import biolib.seq_io as seq_io
+from biolib.parallel import Parallel
+from biolib.bootstrap import Bootstrap
 from biolib.external.execute import check_on_path
 
 
@@ -34,6 +39,7 @@ class FastTree():
 
     def __init__(self, multithreaded=True):
         """Initialization."""
+
         self.logger = logging.getLogger()
 
         self.multithreaded = multithreaded
@@ -42,6 +48,66 @@ class FastTree():
             check_on_path('FastTreeMP')
         else:
             check_on_path('FastTree')
+
+    def bootstrap(self, input_tree, msa_file, seq_type, model_str, num_replicates, output_tree, cpus):
+        """Perform non-parametric bootstrapping.
+
+        Parameters
+        ----------
+        input_tree : str
+            File containing newick tree to decorate with bootstraps.
+        msa_file : str
+            Fasta file containing multiple sequence alignment.
+        seq_type : str
+            Specifies multiple sequences alignment is of 'nt' or 'prot'.
+        model_str : str
+            Specified either the 'wag' or 'jtt' model.
+        num_replicates : int
+            Number of replicates to perform.
+        output_tree: str
+            Output file containing tree with bootstrap values.
+        cpus : int
+            Number of cpus to use.
+        """
+
+        assert(seq_type in ['nt', 'prot'])
+        assert(model_str in ['wag', 'jtt'])
+
+        self.replicate_dir = tempfile.mkdtemp()
+        self.seq_type = seq_type
+        self.model = model_str
+        self.msa = seq_io.read(msa_file)
+
+        # calculate replicates
+        parallel = Parallel(cpus)
+        parallel.run(self._bootstrap, None, xrange(num_replicates), None)
+
+        # calculate support values
+        rep_tree_files = []
+        for rep_index in xrange(num_replicates):
+            rep_tree_files.append(os.path.join(self.replicate_dir, 'bootstrap.tree.' + str(rep_index) + '.tre'))
+
+        Bootstrap().support_values(input_tree, rep_tree_files, output_tree)
+
+        shutil.rmtree(self.replicate_dir)
+
+    def _bootstrap(self, replicated_num):
+        """Infer tree from bootstrapped multiple sequence alignment.
+
+        Parameters
+        ----------
+        replicated_num : int
+          Unique replicate number.
+        """
+
+        output_msa = os.path.join(self.replicate_dir, 'bootstrap.msa.' + str(replicated_num) + '.fna')
+        Bootstrap().bootstrap(self.msa, output_msa)
+
+        output_tree = os.path.join(self.replicate_dir, 'bootstrap.tree.' + str(replicated_num) + '.tre')
+        fast_tree_output = os.path.join(self.replicate_dir, 'bootstrap.fasttree.' + str(replicated_num) + '.out')
+        self.run(output_msa, self.seq_type, self.model, output_tree, fast_tree_output)
+
+        return True
 
     def run(self, msa_file, seq_type, model_str, output_tree, output_tree_log, log_file=None):
         """Infer tree using FastTree.
@@ -62,13 +128,16 @@ class FastTree():
             Output file containing information about running of FastTree.
         """
 
-        if seq_type.upper() == 'PROT':
+        assert(seq_type in ['nt', 'prot'])
+        assert(model_str in ['wag', 'jtt'])
+
+        if seq_type == 'prot':
             seq_type_str = ''
             if model_str.upper() == 'JTT':
                 model_str = ''
             elif model_str.upper() == 'WAG':
                 model_str = '-wag'
-        elif seq_type.upper() == 'NT':
+        elif seq_type == 'nt':
             seq_type_str = '-nt'
             model_str = '-gtr'
 

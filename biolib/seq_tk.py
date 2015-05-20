@@ -259,6 +259,7 @@ def trim_seqs(seqs, min_per_taxa, min_per_bp):
 
     # trim leading and trailing columns
     output_seqs = {}
+    pruned_seqs = set()
     for seq_id, seq in seqs.iteritems():
         seq = seq[first_col_index:last_col_index]
 
@@ -268,8 +269,9 @@ def trim_seqs(seqs, min_per_taxa, min_per_bp):
                 valid_bases += 1
 
         if valid_bases < len(seq) * min_per_bp:
+            pruned_seqs.add(seq_id)
             continue
 
         output_seqs[seq_id] = seq
 
-    return output_seqs
+    return output_seqs, pruned_seqs
