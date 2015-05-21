@@ -53,5 +53,5 @@ class Mafft():
             Output file containing information about running of muscle.
         """
 
-        cmd = 'mafft --auto --thread %d %s > %s 2> %s' % (self.cpus, seqs, output_file, log_file)
+        cmd = 'mafft --anysymbol --auto --thread %d %s > %s 2> %s' % (self.cpus, seqs, output_file, log_file)
         os.system(cmd)
