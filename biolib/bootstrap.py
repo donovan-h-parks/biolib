@@ -59,7 +59,12 @@ class Bootstrap(object):
 
         for node in tree.internal_nodes():
             taxa_labels = [x.taxon.label for x in node.leaf_nodes()]
-            node.label = str(int(rep_tree_list.frequency_of_split(labels=taxa_labels) * 100))
+            bootstrap = int(rep_tree_list.frequency_of_split(labels=taxa_labels) * 100)
+
+            if node.label:
+                node.label = str(bootstrap) + ':' + node.label
+            else:
+                node.label = str(bootstrap)
 
         tree.write_to_path(output_tree, schema='newick', suppress_rooting=True, unquoted_underscores=True)
 
