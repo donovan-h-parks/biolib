@@ -228,7 +228,7 @@ def trim_seqs(seqs, min_per_taxa, min_per_bp):
     seqs : d[seq_id] -> sequence
         Aligned sequences.
     min_per_taxa : float
-        Minimum percentage of taxa required to retain a leading and trailing columns.
+        Minimum percentage of taxa required to retain a column.
     min_per_bp : float
         Minimum percentage of base pairs required to keep trimmed sequence.
 
@@ -236,6 +236,8 @@ def trim_seqs(seqs, min_per_taxa, min_per_bp):
     -------
     dict : d[seq_id] -> sequence
         Dictionary of trimmed sequences.
+    dict : d[seq_id] -> sequence
+        Dictionary of pruned sequences.
     """
 
     alignment_length = len(seqs.values()[0])
@@ -247,31 +249,22 @@ def trim_seqs(seqs, min_per_taxa, min_per_bp):
             if ch != '.' and ch != '-':
                 column_count[i] += 1
 
+    mask = [False] * alignment_length
     for i, count in enumerate(column_count):
         if count >= min_per_taxa * len(seqs):
-            first_col_index = i
-            break
-
-    for i in xrange(alignment_length - 1, -1, -1):
-        if column_count[i] >= min_per_taxa * len(seqs):
-            last_col_index = min(i + 1, alignment_length)
-            break
+            mask[i] = True
 
     # trim leading and trailing columns
     output_seqs = {}
-    pruned_seqs = set()
+    pruned_seqs = {}
     for seq_id, seq in seqs.iteritems():
-        seq = seq[first_col_index:last_col_index]
+        masked_seq = ''.join([seq[i] for i in xrange(0, len(mask)) if mask[i]])
 
-        valid_bases = 0
-        for ch in seq:
-            if ch != '.' and ch != '-':
-                valid_bases += 1
-
-        if valid_bases < len(seq) * min_per_bp:
-            pruned_seqs.add(seq_id)
+        valid_bases = len(masked_seq) - masked_seq.count('.') - masked_seq.count('-')
+        if valid_bases < len(masked_seq) * min_per_bp:
+            pruned_seqs[seq_id] = masked_seq
             continue
 
-        output_seqs[seq_id] = seq
+        output_seqs[seq_id] = masked_seq
 
     return output_seqs, pruned_seqs
