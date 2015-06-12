@@ -82,7 +82,7 @@ def unique(genome_files):
     return duplicates
 
 
-def modify(self, input_file, scaffold_file, seqs_to_add, seqs_to_remove, output_file):
+def modify(input_file, scaffold_file, seqs_to_add, seqs_to_remove, output_file):
     """Add or remove scaffolds from a fasta file.
 
     Parameters
@@ -108,20 +108,24 @@ def modify(self, input_file, scaffold_file, seqs_to_add, seqs_to_remove, output_
     seqs = seq_io.read(input_file)
 
     # add sequences to bin
-    failed_to_add = set(seqs_to_add)
-    if seqs_to_add != None:
-        for seq_id, seq in seq_io.read_seq(scaffold_file):
-            if seq_id in seqs_to_add:
-                failed_to_add.remove(seq_id)
-                seqs[seq_id] = seq
+    failed_to_add = set()
+    if seqs_to_add:
+        failed_to_add = set(seqs_to_add)
+        if seqs_to_add != None:
+            for seq_id, seq in seq_io.read_seq(scaffold_file):
+                if seq_id in seqs_to_add:
+                    failed_to_add.remove(seq_id)
+                    seqs[seq_id] = seq
 
     # remove sequences from bin
-    failed_to_remove = set(seqs_to_remove)
-    if seqs_to_remove != None:
-        for seq_id in seqs_to_remove:
-            if seq_id in seqs:
-                failed_to_remove.remove(seq_id)
-                seqs.pop(seq_id)
+    failed_to_remove = set()
+    if seqs_to_remove:
+        failed_to_remove = set(seqs_to_remove)
+        if seqs_to_remove != None:
+            for seq_id in seqs_to_remove:
+                if seq_id in seqs:
+                    failed_to_remove.remove(seq_id)
+                    seqs.pop(seq_id)
 
     # save modified bin
     seq_io.write_fasta(seqs, output_file)

@@ -140,7 +140,10 @@ def concatenate_files(input_files, output_file):
     with open_file(output_file, "wb") as outfile:
         for f in input_files:
             with open(f, "rb") as infile:
-                outfile.write(infile.read())
+                d = infile.read()
+                outfile.write(d)
+                if d[-1] != '\n':
+                    outfile.write('\n')
 
 
 def alphanumeric_sort(l):

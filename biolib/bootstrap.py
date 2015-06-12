@@ -49,17 +49,17 @@ class Bootstrap(object):
           Name of output tree with support values.
         """
 
-        tree = dendropy.Tree.get_from_path(input_tree, schema='newick', as_rooted=False, preserve_underscores=True)
+        tree = dendropy.Tree.get_from_path(input_tree, schema='newick', rooting="force-unrooted", preserve_underscores=True)
 
         rep_trees = []
         for rep_tree_file in replicate_trees:
-            rep_trees.append(dendropy.Tree.get_from_path(rep_tree_file, schema='newick', as_rooted=False, preserve_underscores=True))
+            rep_trees.append(dendropy.Tree.get_from_path(rep_tree_file, schema='newick', rooting="force-unrooted", preserve_underscores=True))
 
         rep_tree_list = dendropy.TreeList(rep_trees)
 
         for node in tree.internal_nodes():
             taxa_labels = [x.taxon.label for x in node.leaf_nodes()]
-            bootstrap = int(rep_tree_list.frequency_of_split(labels=taxa_labels) * 100)
+            bootstrap = int(rep_tree_list.frequency_of_bipartition(labels=taxa_labels) * 100)
 
             if node.label:
                 node.label = str(bootstrap) + ':' + node.label

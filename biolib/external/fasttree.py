@@ -27,6 +27,7 @@ import os
 import logging
 import shutil
 import tempfile
+import ntpath
 
 import biolib.seq_io as seq_io
 from biolib.parallel import Parallel
@@ -98,6 +99,8 @@ class FastTree():
         ----------
         replicated_num : int
           Unique replicate number.
+        cpus : int
+            Number of cpus to use.
         """
 
         output_msa = os.path.join(self.replicate_dir, 'bootstrap.msa.' + str(replicated_num) + '.fna')
@@ -108,6 +111,48 @@ class FastTree():
         self.run(output_msa, self.seq_type, self.model, output_tree, fast_tree_output)
 
         return True
+
+    def parallel_run(self, msa_files, seq_type, model_str, output_prefix, cpus):
+        """Infer tree using FastTree in parallel.
+
+        Parameters
+        ----------
+        msa_files : str
+            Fasta files containing multiple sequence alignments.
+        seq_type : str
+            Specifies multiple sequences alignment is of 'nt' or 'prot'.
+        model_str : str
+            Specified either the 'wag' or 'jtt' model.
+        output_prefix: str
+            Prefix for all output files.
+        """
+
+        assert(seq_type in ['nt', 'prot'])
+        assert(model_str in ['wag', 'jtt'])
+
+        self.output_prefix = output_prefix
+        self.seq_type = seq_type
+        self.model = model_str
+
+        parallel = Parallel(cpus)
+        parallel.run(self._parallel_infer_tree, None, msa_files, None)
+
+    def _parallel_infer_tree(self, msa_file):
+        """Infer tree using FastTree in parallel.
+
+        Parameters
+        ----------
+        msa_file : str
+            Fasta files containing multiple sequence alignments.
+        """
+
+        file_prefix = ntpath.basename(msa_file)
+        if '.' in file_prefix:
+            file_prefix = file_prefix[0:file_prefix.find('.')]
+
+        output_tree = os.path.join(self.output_prefix, file_prefix + '.tree')
+        fast_tree_output = os.path.join(self.output_prefix, file_prefix + '.log')
+        self.run(msa_file, self.seq_type, self.model, output_tree, fast_tree_output)
 
     def run(self, msa_file, seq_type, model_str, output_tree, output_tree_log, log_file=None):
         """Infer tree using FastTree.
