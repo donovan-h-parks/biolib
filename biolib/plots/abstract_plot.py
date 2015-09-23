@@ -48,7 +48,7 @@ class AbstractPlot(FigureCanvas):
             Options = namedtuple('Options', 'width height font_size dpi')
             self.options = Options(6, 6, 10, 300)
 
-        self.set_font_size(options.font_size)
+        self.set_font_size(self.options.font_size)
         self.fig = Figure(facecolor='white', dpi=self.options.dpi)
 
         FigureCanvas.__init__(self, self.fig)

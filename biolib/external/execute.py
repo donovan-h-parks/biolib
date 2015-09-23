@@ -136,7 +136,7 @@ def check_on_path(program, exit_on_fail=True):
         return True
 
     if exit_on_fail:
-        logging.error('%s is not on the system path.' % program)
+        print '%s is not on the system path.' % program
         sys.exit()
 
     return False

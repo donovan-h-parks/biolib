@@ -50,16 +50,21 @@ class Bootstrap(object):
         """
 
         tree = dendropy.Tree.get_from_path(input_tree, schema='newick', rooting="force-unrooted", preserve_underscores=True)
+        tree.encode_bipartitions()
 
-        rep_trees = []
+        rep_trees = dendropy.TreeList(taxon_namespace=tree.taxon_namespace)
         for rep_tree_file in replicate_trees:
-            rep_trees.append(dendropy.Tree.get_from_path(rep_tree_file, schema='newick', rooting="force-unrooted", preserve_underscores=True))
+            rep_tree = dendropy.Tree.get_from_path(rep_tree_file,
+                                                         schema='newick',
+                                                         rooting="force-unrooted",
+                                                         preserve_underscores=True,
+                                                         taxon_namespace=tree.taxon_namespace)
 
-        rep_tree_list = dendropy.TreeList(rep_trees)
+            rep_tree.encode_bipartitions()
+            rep_trees.append(rep_tree)
 
         for node in tree.internal_nodes():
-            taxa_labels = [x.taxon.label for x in node.leaf_nodes()]
-            bootstrap = int(rep_tree_list.frequency_of_bipartition(labels=taxa_labels) * 100)
+            bootstrap = int(rep_trees.frequency_of_bipartition(bipartition=node.bipartition) * 100)
 
             if node.label:
                 node.label = str(bootstrap) + ':' + node.label

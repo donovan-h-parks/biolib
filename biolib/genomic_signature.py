@@ -101,9 +101,10 @@ class GenomicSignature(object):
 
         sig = [0] * len(self.kmer_cols)
         for seq in seqs.values():
-            for i in xrange(0, len(seq) - self.k + 1):
+            tmp_seq = seq.upper()
+            for i in xrange(0, len(tmp_seq) - self.k + 1):
                 try:
-                    kmer_index = self.kmer_index[seq[i:i + self.k]]
+                    kmer_index = self.kmer_index[tmp_seq[i:i + self.k]]
                     sig[kmer_index] += 1
                 except KeyError:
                     # unknown kmer due to an ambiguous character
@@ -134,10 +135,12 @@ class GenomicSignature(object):
             Count of each kmer in the canonical order.
         """
 
+        tmp_seq = seq.upper()
+
         sig = [0] * len(self.kmer_cols)
-        for i in xrange(0, len(seq) - self.k + 1):
+        for i in xrange(0, len(tmp_seq) - self.k + 1):
             try:
-                kmer_index = self.kmer_index[seq[i:i + self.k]]
+                kmer_index = self.kmer_index[tmp_seq[i:i + self.k]]
                 sig[kmer_index] += 1
             except KeyError:
                 # unknown kmer due to an ambiguous character
