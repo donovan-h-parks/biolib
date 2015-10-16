@@ -70,7 +70,7 @@ class Parallel(object):
                 consumer_data = parallel.run(self._producer,
                                                 self._consumer,
                                                 data_items = [1, 2, 3, 4, 5],
-                                                self.progress)
+                                                self._progress)
 
                 print consumer_data
     """

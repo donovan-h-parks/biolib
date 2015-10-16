@@ -48,7 +48,7 @@ class ColorBrewer(object):
 
         from color_brewer import ColorBrewer
         cb = ColorBrewer()
-        colors = cb2.maps["qualSet1"].values()[0:3]
+        colors = cb.maps["qualSet1"].values()[0:3]
     """
 
     def __init__(self):

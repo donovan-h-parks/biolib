@@ -26,12 +26,97 @@ __status__ = "Development"
 from collections import defaultdict
 
 import biolib.seq_io as seq_io
+import biolib.seq_tk as seq_tk
 from biolib.common import remove_extension
 
 """
 Functions for verify, exploring, modifying and
 calculating statistics on one or more genomes.
 """
+
+
+def gc_count(seqs):
+    """Determine number of G or C bases in sequences.
+
+    Parameters
+    ----------
+    seqs : dict[seq_id] -> seq
+        Sequences indexed by sequence ids.
+
+    Returns
+    -------
+    int
+        Number of G or C bases in sequences.
+    """
+
+    C = 0
+    G = 0
+    for seq in seqs.values():
+        _a, c, g, _t = seq_tk.count_nt(seq)
+
+        C += c
+        G += g
+
+    return G + C
+
+
+def gc(seqs):
+    """Calculate GC of sequences.
+
+    GC is calculated as (G+C)/(A+C+G+T), where
+    each of these terms represents the number
+    of nucleotides within the sequence. Ambiguous
+    and degenerate bases are ignored. Uracil (U)
+    is treated as a thymine (T).
+
+    Parameters
+    ----------
+    seqs : dict[seq_id] -> seq
+        Sequences indexed by sequence ids.
+
+    Returns
+    -------
+    float
+        GC content of sequences.
+    """
+
+    A = 0
+    C = 0
+    G = 0
+    T = 0
+    for seq in seqs.values():
+        a, c, g, t = seq_tk.count_nt(seq)
+
+        A += a
+        C += c
+        G += g
+        T += t
+
+    return float(G + C) / (A + C + G + T)
+
+
+def ambiguous_nucleotides(seqs):
+    """Count ambiguous or degenerate nucleotides in sequences.
+
+    Any base that is not a A, C, G, or T/U is considered
+    to be ambiguous or degenerate.
+
+    Parameters
+    ----------
+    seqs : dict[seq_id] -> seq
+        Sequences indexed by sequence ids.
+
+    Returns
+    -------
+    int
+        Number of ambiguous and degenerate bases.
+    """
+
+    num_ambiguous = 0
+    for seq in seqs.values():
+        num_ambiguous += seq_tk.ambiguous_nucleotides(seq)
+
+    return num_ambiguous
 
 
 def unique(genome_files):

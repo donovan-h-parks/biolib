@@ -32,7 +32,7 @@ _complements = string.maketrans('acgtrymkbdhvACGTRYMKBDHV', 'tgcayrkmvhdbTGCAYRK
 
 
 def count_nt(seq):
-    """Count occurences of each nucleotide in a sequence.
+    """Count occurrences of each nucleotide in a sequence.
 
     Only the bases A, C, G, and T(U) are counted. Ambiguous
     bases are ignored.
@@ -140,6 +140,31 @@ def N50(seqs):
     return N50
 
 
+def L50(seqs, N50):
+    """Calculate L50 for a set of sequences.
+
+     L50 is defined as the number of sequences
+     that are longer than, or equal to, the
+     N50 length.
+
+    Parameters
+    ----------
+    seqs : dict[seq_id] -> seq
+        Sequences indexed by sequence ids.
+    N50 : int
+        N50 of sequences.
+
+    Returns
+    -------
+    int
+        L50 for the set of sequences.
+    """
+
+    L50 = sum([1 for x in seqs.values() if len(x) >= N50])
+
+    return L50
+
+
 def mean_length(seqs):
     """Calculate mean length of sequences.
 
@@ -150,13 +175,11 @@ def mean_length(seqs):
 
     Returns
     -------
-    int
+    float
         Mean length of sequences.
     """
 
-    total_len = 0
-    for _seq_id, seq in seqs:
-        total_len += len(seq)
+    total_len = sum([len(x) for x in seqs.values()])
 
     return float(total_len) / len(seqs)
 
@@ -175,11 +198,36 @@ def max_length(seqs):
         Length of longest sequence.
     """
 
-    longest_seq = 0
-    for _seq_id, seq in seqs:
-        longest_seq = max(longest_seq, len(seq))
+    return max([len(x) for x in seqs.values()])
 
-    return longest_seq
+
+def identify_contigs(seqs, contig_break='NNNNNNNNNN'):
+    """Break scaffolds into contigs.
+
+    Parameters
+    ----------
+    seqs : dict[seq_id] -> seq
+        Sequences indexed by sequence ids.
+    contig_break : str
+        Motif used to split scaffolds into contigs.
+
+    Returns
+    -------
+    dict : dict[seq_id] -> seq
+        Contigs indexed by sequence ids.
+    """
+
+    contigs = {}
+    for seq_id, seq in seqs.iteritems():
+        seq = seq.upper()
+        contig_count = 0
+        for contig in seq.split(contig_break):
+            contig = contig.replace('N', '')
+            if contig:
+                contigs[seq_id + '_c' + str(contig_count)] = contig
+                contig_count += 1
+
+    return contigs
 
 
 def fragment(seq, window_size, step_size):
