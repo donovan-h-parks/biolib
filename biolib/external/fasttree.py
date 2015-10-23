@@ -31,7 +31,7 @@ import ntpath
 
 import biolib.seq_io as seq_io
 from biolib.parallel import Parallel
-from biolib.bootstrap import Bootstrap
+from biolib.bootstrap import bootstrap_alignment, bootstrap_support
 from biolib.external.execute import check_on_path
 
 
@@ -88,7 +88,7 @@ class FastTree():
         for rep_index in xrange(num_replicates):
             rep_tree_files.append(os.path.join(self.replicate_dir, 'bootstrap.tree.' + str(rep_index) + '.tre'))
 
-        Bootstrap().support_values(input_tree, rep_tree_files, output_tree)
+        bootstrap_alignment(input_tree, rep_tree_files, output_tree)
 
         shutil.rmtree(self.replicate_dir)
 
@@ -104,7 +104,7 @@ class FastTree():
         """
 
         output_msa = os.path.join(self.replicate_dir, 'bootstrap.msa.' + str(replicated_num) + '.fna')
-        Bootstrap().bootstrap(self.msa, output_msa)
+        bootstrap_support(self.msa, output_msa)
 
         output_tree = os.path.join(self.replicate_dir, 'bootstrap.tree.' + str(replicated_num) + '.tre')
         fast_tree_output = os.path.join(self.replicate_dir, 'bootstrap.fasttree.' + str(replicated_num) + '.out')
@@ -156,6 +156,10 @@ class FastTree():
 
     def run(self, msa_file, seq_type, model_str, output_tree, output_tree_log, log_file=None):
         """Infer tree using FastTree.
+
+        All trees are inferred using the GAMMA distribution to model
+        rate heterogeneity. Nucleotide trees are inferred under the
+        GTR model.
 
         Parameters
         ----------

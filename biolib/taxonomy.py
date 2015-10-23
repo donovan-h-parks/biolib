@@ -455,7 +455,7 @@ class Taxonomy(object):
                 # appear in Greengenes-style taxonomy files
                 tax_str = tax_str[0:-1]
 
-            d[unique_id] = tax_str.split(';')
+            d[unique_id] = [x.strip() for x in tax_str.split(';')]
 
         return d
 

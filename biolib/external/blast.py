@@ -31,7 +31,6 @@ from biolib.external.execute import check_on_path
 
 """
 To do:
- - this should be extended to handle blastn and some of the variants
  - this class and the diamond class should mirror each other
    to the extent possible
 """
@@ -58,6 +57,7 @@ class Blast():
         self.output_fmt = {'standard': '6',
                             'custom': '6 qseqid qlen sseqid stitle slen length pident evalue bitscore'}
         self.blastp_tasks = {'blastp', 'blastp-fast', 'blastp-short'}
+        self.blastn_tasks = {'blastn', 'blastn-short', 'dc-megablast', 'megablast', 'rmblastn'}
 
         self.BlastHit = namedtuple('BlastHit', """query_id
                                                 subject_id
@@ -103,12 +103,46 @@ class Blast():
         cmd += " -outfmt '%s'" % self.output_fmt[output_fmt]
         os.system(cmd)
 
+    def blastn(self, query_seqs, nucl_db, output_file, evalue=1e-3, max_matches=500, output_fmt='standard', task='megablast'):
+        """Apply blastn to query file.
+
+        Finds homologs to query sequences using blastn homology search
+        against a nucleotide database. Hit can be reported using  either
+        the 'standard' table 6 format or the following 'custom' format:
+            qseqid qlen sseqid slen length pident evalue bitscore
+
+
+        Parameters
+        ----------
+        query_seqs : str
+            File containing query sequences.
+        nucl_db : str
+            File containing blastn formatted database.
+        output_file : str
+            Output file containing blastn results.
+        evalue : float
+            E-value threshold used to identify homologs.
+        max_matches : int
+            Maximum hits per query sequence.
+        output_fmt : str
+            Specified output format of blast table: standard or custom.
+        """
+
+        assert(output_fmt in self.output_fmt.keys())
+        assert(task in self.blastn_tasks)
+
+        cmd = "blastn -num_threads %d" % self.cpus
+        cmd += " -query %s -db %s -out %s -evalue %g" % (query_seqs, nucl_db, output_file, evalue)
+        cmd += " -max_target_seqs %d" % max_matches
+        cmd += " -task %s" % task
+        cmd += " -outfmt '%s'" % self.output_fmt[output_fmt]
+        os.system(cmd)
+
     def identify_homologs(self,
                           custom_blast_table,
                           evalue_threshold,
                           perc_identity_threshold,
-                          perc_aln_len_threshold,
-                          output_fmt):
+                          perc_aln_len_threshold):
         """Identify homologs among blast hits based on specified criteria.
 
         Parameters

@@ -22,74 +22,73 @@ __license__ = 'GPL3'
 __maintainer__ = 'Donovan Parks'
 __email__ = 'donovan.parks@gmail.com'
 
-import logging
 import random
 
 import dendropy
 
+"""Perform non-parametric bootstrapping on multiple sequence alignment."""
 
-class Bootstrap(object):
-    """Perform non-parametric bootstrapping on multiple sequence alignment."""
 
-    def __init__(self):
-        """Initialization."""
+def bootstrap_support(input_tree, replicate_trees, output_tree):
+    """ Calculate support for tree with replicates covering the same taxon set.
 
-        self.logger = logging.getLogger()
+    Parameters
+    ----------
+    input_tree : str
+      Tree inferred from complete data.
+    replicate_trees : iterable
+      Files containing replicate trees.
+    output_tree: str
+      Name of output tree with support values.
+    """
 
-    def support_values(self, input_tree, replicate_trees, output_tree):
-        """ Calculate support for tree with replicates covering the same taxon set.
+    tree = dendropy.Tree.get_from_path(input_tree, schema='newick', rooting="force-unrooted", preserve_underscores=True)
+    tree.bipartitions = True
+    tree.encode_bipartitions()
 
-        Parameters
-        ----------
-        input_tree : str
-          Tree inferred from complete data.
-        replicate_trees : iterable
-          Files containing replicate trees.
-        output_tree: str
-          Name of output tree with support values.
-        """
+    rep_trees = dendropy.TreeArray(taxon_namespace=tree.taxon_namespace,
+                                    is_rooted_trees=False,
+                                    ignore_edge_lengths=True,
+                                    ignore_node_ages=True,
+                                    use_tree_weights=False)
 
-        tree = dendropy.Tree.get_from_path(input_tree, schema='newick', rooting="force-unrooted", preserve_underscores=True)
-        tree.encode_bipartitions()
+    rep_trees.read_from_files(files=replicate_trees,
+                                schema='newick',
+                                rooting="force-unrooted",
+                                preserve_underscores=True,
+                                taxon_namespace=tree.taxon_namespace)
 
-        rep_trees = dendropy.TreeList(taxon_namespace=tree.taxon_namespace)
-        for rep_tree_file in replicate_trees:
-            rep_tree = dendropy.Tree.get_from_path(rep_tree_file,
-                                                         schema='newick',
-                                                         rooting="force-unrooted",
-                                                         preserve_underscores=True,
-                                                         taxon_namespace=tree.taxon_namespace)
+    rep_trees.summarize_splits_on_tree(tree,
+                                       is_bipartitions_updated=True,
+                                       add_support_as_node_attribute=True,
+                                       support_as_percentages=True)
 
-            rep_tree.encode_bipartitions()
-            rep_trees.append(rep_tree)
+    for node in tree.internal_nodes():
+        if node.label:
+            node.label = str(int(node.support)) + ':' + node.label
+        else:
+            node.label = str(int(node.support))
 
-        for node in tree.internal_nodes():
-            bootstrap = int(rep_trees.frequency_of_bipartition(bipartition=node.bipartition) * 100)
+    tree.write_to_path(output_tree, schema='newick', suppress_rooting=True, unquoted_underscores=True)
 
-            if node.label:
-                node.label = str(bootstrap) + ':' + node.label
-            else:
-                node.label = str(bootstrap)
 
-        tree.write_to_path(output_tree, schema='newick', suppress_rooting=True, unquoted_underscores=True)
+def bootstrap_alignment(msa, output_file):
+    """Bootstrap multiple sequence alignment.
 
-    def bootstrap(self, msa, output_file):
-        """Bootstrap multiple sequence alignment.
+    Parameters
+    ----------
+    msa : d[seq_id] -> seq
+      Full multiple sequence alignment.
+    output_file : str
+      File to write bootstrapped alignment.
+    """
+    alignment_len = len(msa[msa.keys()[0]])
+    cols = [random.randint(0, alignment_len - 1) for _ in xrange(alignment_len)]
 
-        Parameters
-        ----------
-        msa : d[seq_id] -> seq
-          Full multiple sequence alignment.
-        output_file : str
-          File to write bootstrapped alignment.
-        """
-        alignment_len = len(msa[msa.keys()[0]])
-        cols = [random.randint(0, alignment_len - 1) for _ in xrange(alignment_len)]
-
-        fout = open(output_file, 'w')
-        for seq_id, seq in msa.iteritems():
-            fout.write('>' + seq_id + '\n')
-            for col in cols:
-                fout.write(seq[col])
-            fout.write('\n')
-        fout.close()
+    fout = open(output_file, 'w')
+    for seq_id, seq in msa.iteritems():
+        fout.write('>' + seq_id + '\n')
+        for col in cols:
+            fout.write(seq[col])
+        fout.write('\n')
+    fout.close()

@@ -138,7 +138,7 @@ class Prodigal(object):
             # clean up temporary files
             shutil.rmtree(tmp_dir)
 
-        return (genome_id, best_translation_table, table_coding_density[4], table_coding_density[11])
+        return (genome_id, aa_gene_file, nt_gene_file, gff_file, best_translation_table, table_coding_density[4], table_coding_density[11])
 
     def _consumer(self, produced_data, consumer_data):
         """Consume results from producer processes.
@@ -152,19 +152,27 @@ class Prodigal(object):
 
         Returns
         -------
-        consumer_data: d[genome_id] -> namedtuple(best_translation_table
-                                                        coding_density_4
-                                                        coding_density_11)
+        consumer_data: d[genome_id] -> namedtuple(aa_gene_file,
+                                                    nt_gene_file,
+                                                    gff_file,
+                                                    best_translation_table,
+                                                    coding_density_4,
+                                                    coding_density_11)
             Summary statistics of called genes for each genome.
         """
 
-        ConsumerData = namedtuple('ConsumerData', 'best_translation_table coding_density_4 coding_density_11')
+        ConsumerData = namedtuple('ConsumerData', 'aa_gene_file nt_gene_file gff_file best_translation_table coding_density_4 coding_density_11')
         if consumer_data == None:
             consumer_data = defaultdict(ConsumerData)
 
-        genome_id, best_translation_table, coding_density_4, coding_density_11 = produced_data
+        genome_id, aa_gene_file, nt_gene_file, gff_file, best_translation_table, coding_density_4, coding_density_11 = produced_data
 
-        consumer_data[genome_id] = ConsumerData(best_translation_table, coding_density_4, coding_density_11)
+        consumer_data[genome_id] = ConsumerData(aa_gene_file,
+                                                nt_gene_file,
+                                                gff_file,
+                                                best_translation_table,
+                                                coding_density_4,
+                                                coding_density_11)
 
         return consumer_data
 
@@ -186,7 +194,7 @@ class Prodigal(object):
 
         return self.progress_str % (processed_items, total_items, float(processed_items) * 100 / total_items)
 
-    def run(self, genome_files, called_genes, translation_table, meta, output_dir):
+    def run(self, genome_files, output_dir, called_genes=False, translation_table=None, meta=False):
         """Call genes with Prodigal.
 
         Call genes with prodigal and store the results in the
