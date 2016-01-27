@@ -23,6 +23,7 @@ __maintainer__ = 'Donovan Parks'
 __email__ = 'donovan.parks@gmail.com'
 
 import os
+import types
 import tempfile
 import argparse
 
@@ -46,14 +47,11 @@ class CustomHelpFormatter(argparse.HelpFormatter):
     http://stackoverflow.com/questions/9642692/argparse-help-without-duplicate-allcaps
     """
 
-    def _split_lines(self, text, width):
-        return text.splitlines()
-
     def _get_help_string(self, action):
         """Place default value in help string."""
         h = action.help
         if '%(default)' not in action.help:
-            if action.default != '' and action.default != [] and action.default != None:
+            if action.default != '' and action.default != [] and action.default and type(action.default) != types.BooleanType:
                 if action.default is not argparse.SUPPRESS:
                     defaulting_nargs = [argparse.OPTIONAL, argparse.ZERO_OR_MORE]
 
@@ -65,10 +63,6 @@ class CustomHelpFormatter(argparse.HelpFormatter):
                         else:
                             h += ' (default: %(default)s)'
             return h
-
-    def _fill_text(self, text, width, indent):
-        """Permit multiple line descriptions."""
-        return ''.join([indent + line for line in text.splitlines(True)])
 
     def _format_action_invocation(self, action):
         """Removes duplicate ALLCAPS with positional arguments."""

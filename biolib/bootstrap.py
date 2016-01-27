@@ -72,8 +72,15 @@ def bootstrap_support(input_tree, replicate_trees, output_tree):
     tree.write_to_path(output_tree, schema='newick', suppress_rooting=True, unquoted_underscores=True)
 
 
-def bootstrap_alignment(msa, output_file):
+def bootstrap_alignment(msa, output_file, frac=1.0):
     """Bootstrap multiple sequence alignment.
+
+    True bootstrapping requires subsampling an alignment,
+    with replacement, to construct new alignments
+    with the same length as the input alignment. The
+    'frac' parameter allows shorter bootstrap alignments
+    to be generated in order to reduce computational
+    demands.
 
     Parameters
     ----------
@@ -81,9 +88,12 @@ def bootstrap_alignment(msa, output_file):
       Full multiple sequence alignment.
     output_file : str
       File to write bootstrapped alignment.
+    frac : float
+      Fraction of alignment to subsample.
     """
     alignment_len = len(msa[msa.keys()[0]])
-    cols = [random.randint(0, alignment_len - 1) for _ in xrange(alignment_len)]
+    sample_len = int(alignment_len * frac)
+    cols = [random.randint(0, alignment_len - 1) for _ in xrange(sample_len)]
 
     fout = open(output_file, 'w')
     for seq_id, seq in msa.iteritems():

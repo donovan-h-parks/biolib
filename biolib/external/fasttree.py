@@ -88,7 +88,7 @@ class FastTree():
         for rep_index in xrange(num_replicates):
             rep_tree_files.append(os.path.join(self.replicate_dir, 'bootstrap.tree.' + str(rep_index) + '.tre'))
 
-        bootstrap_alignment(input_tree, rep_tree_files, output_tree)
+        bootstrap_support(input_tree, rep_tree_files, output_tree)
 
         shutil.rmtree(self.replicate_dir)
 
@@ -104,7 +104,7 @@ class FastTree():
         """
 
         output_msa = os.path.join(self.replicate_dir, 'bootstrap.msa.' + str(replicated_num) + '.fna')
-        bootstrap_support(self.msa, output_msa)
+        bootstrap_alignment(self.msa, output_msa)
 
         output_tree = os.path.join(self.replicate_dir, 'bootstrap.tree.' + str(replicated_num) + '.tre')
         fast_tree_output = os.path.join(self.replicate_dir, 'bootstrap.fasttree.' + str(replicated_num) + '.out')
@@ -112,7 +112,7 @@ class FastTree():
 
         return True
 
-    def parallel_run(self, msa_files, seq_type, model_str, output_prefix, cpus):
+    def parallel_run(self, msa_files, seq_type, model_str, output_dir, cpus):
         """Infer tree using FastTree in parallel.
 
         Parameters
@@ -123,14 +123,14 @@ class FastTree():
             Specifies multiple sequences alignment is of 'nt' or 'prot'.
         model_str : str
             Specified either the 'wag' or 'jtt' model.
-        output_prefix: str
+        output_dir: str
             Prefix for all output files.
         """
 
         assert(seq_type in ['nt', 'prot'])
         assert(model_str in ['wag', 'jtt'])
 
-        self.output_prefix = output_prefix
+        self.output_dir = output_dir
         self.seq_type = seq_type
         self.model = model_str
 
@@ -150,8 +150,8 @@ class FastTree():
         if '.' in file_prefix:
             file_prefix = file_prefix[0:file_prefix.find('.')]
 
-        output_tree = os.path.join(self.output_prefix, file_prefix + '.tree')
-        fast_tree_output = os.path.join(self.output_prefix, file_prefix + '.log')
+        output_tree = os.path.join(self.output_dir, file_prefix + '.tree')
+        fast_tree_output = os.path.join(self.output_dir, file_prefix + '.log')
         self.run(msa_file, self.seq_type, self.model, output_tree, fast_tree_output)
 
     def run(self, msa_file, seq_type, model_str, output_tree, output_tree_log, log_file=None):

@@ -26,10 +26,11 @@ import os
 import sys
 import gzip
 import traceback
-import exceptions as exception
+
+from biolib.exceptions import BioLibError
 
 
-class InputFileException(exception.Exception):
+class InputFileError(BioLibError):
     pass
 
 
@@ -166,7 +167,7 @@ def read_fasta(fasta_file, keep_annotation=False):
     """
 
     if not os.path.exists(fasta_file):
-        raise InputFileException
+        raise InputFileError("Failed to open file %s" % fasta_file)
 
     if os.stat(fasta_file).st_size == 0:
         return
@@ -218,7 +219,7 @@ def read_fastq(fastq_file):
     """
 
     if not os.path.exists(fastq_file):
-        raise InputFileException
+        raise InputFileError
 
     if os.stat(fastq_file).st_size == 0:
         return
@@ -314,7 +315,7 @@ def read_fasta_seq(fasta_file, keep_annotation=False):
     """
 
     if not os.path.exists(fasta_file):
-        raise InputFileException
+        raise InputFileError
 
     if os.stat(fasta_file).st_size == 0:
         return
@@ -344,7 +345,7 @@ def read_fasta_seq(fasta_file, keep_annotation=False):
                     seq_id, annotation = line_split
                 else:
                     seq_id = line_split[0]
-                    annotation = None
+                    annotation = ''
                 seq = []
             else:
                 seq.append(line[0:-1])
@@ -388,7 +389,7 @@ def read_fastq_seq(fastq_file):
     """
 
     if not os.path.exists(fastq_file):
-        raise InputFileException
+        raise InputFileError
 
     if os.stat(fastq_file).st_size == 0:
         return
@@ -434,7 +435,7 @@ def extract_seqs(fasta_file, seqs_to_extract):
     """
 
     if not os.path.exists(fasta_file):
-        raise InputFileException
+        raise InputFileError
 
     if os.stat(fasta_file).st_size == 0:
         return
@@ -472,7 +473,7 @@ def seq_lengths(fasta_file):
     """
 
     if not os.path.exists(fasta_file):
-        raise InputFileException
+        raise InputFileError
 
     if os.stat(fasta_file).st_size == 0:
         return

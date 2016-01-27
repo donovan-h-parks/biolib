@@ -316,3 +316,34 @@ def trim_seqs(seqs, min_per_taxa, min_per_bp):
         output_seqs[seq_id] = masked_seq
 
     return output_seqs, pruned_seqs
+
+
+def aai(seq1, seq2):
+    """Calculate AAI between sequences.
+
+    Parameters
+    ----------
+    seq1 : str
+        First sequence.
+    seq2 : float
+        Second sequence.
+
+    Returns
+    -------
+    float
+        AAI between sequences.
+    """
+
+    assert len(seq1) == len(seq2)
+
+    mismatches = 0
+    matches = 0
+    for c1, c2 in zip(seq1.upper(), seq2.upper()):
+        if c1 != c2:
+            mismatches += 1
+        elif c1 == '-' and c2 == '-':
+            pass
+        else:
+            matches += 1
+
+        return matches * 100.0 / (matches + mismatches)
