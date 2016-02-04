@@ -137,13 +137,13 @@ class Taxonomy(object):
 
         Parameters
         ----------
-        dict : d[unique_id] -> [d__<taxon>, ..., s__<taxon>]
-            Taxa indexed by unique ids.
+        list : [d__<taxon>, ..., s__<taxon>]
+            List of taxa.
 
         Returns
         -------
-        dict : d[unique_id] -> [d__<taxon>, ..., s__<taxon>]
-            Taxa indexed by unique ids.
+        list
+            List of taxa with all ranks.
         """
 
         new_taxa = []
