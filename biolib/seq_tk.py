@@ -302,7 +302,7 @@ def trim_seqs(seqs, min_per_taxa, min_per_bp):
         if count >= min_per_taxa * len(seqs):
             mask[i] = True
 
-    # trim leading and trailing columns
+    # trim columns
     output_seqs = {}
     pruned_seqs = {}
     for seq_id, seq in seqs.iteritems():

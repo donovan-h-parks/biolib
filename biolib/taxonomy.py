@@ -132,7 +132,7 @@ class Taxonomy(object):
         """Fill in any missing ranks in a taxonomy string.
 
         This function assumes the taxonomic ranks are
-        in proper rank order, but that some ranks may
+        in the proper rank order, but that some ranks may
         be missing.
 
         Parameters
@@ -201,16 +201,16 @@ class Taxonomy(object):
     def validate_species_name(self, species_name, require_full=True, require_prefix=True):
         """Validate species name.
 
-        A full species name should include a 'specific epithet' (genus) and
-        a 'specific name' (species), such as Escherichia coli. This method
-        assumes the epithet and name should be separated by a space.
+        A full species name should be  binomial and include a 'generic name' (genus) and
+        a 'specific epithet' (species), i.e. Escherichia coli. This method
+        assumes the two names should be separated by a space.
 
         Parameters
         ----------
         species_name : str
             Species name to validate
         require_full : boolean
-            Flag indicating if species name must include 'specific epithet' and 'specific name'.
+            Flag indicating if species name must include 'generic name and 'specific epithet'.
         require_prefix : boolean
             Flag indicating if name must start with the species prefix ('s__').
 
@@ -239,10 +239,10 @@ class Taxonomy(object):
         if require_full:
             if 'candidatus' in species_name.lower():
                 if len(species_name.split(' ')) <= 2:
-                    return False, 'name appears to be missing the specific epithet'
+                    return False, 'name appears to be missing the generic name'
             else:
                 if len(species_name.split(' ')) <= 1:
-                    return False, 'name appears to be missing the specific epithet'
+                    return False, 'name appears to be missing the generic name'
 
         return True, None
 
@@ -313,9 +313,6 @@ class Taxonomy(object):
                         continue
 
                     if taxa[r - 1] != expected_parent[taxa[r]]:
-                        print taxa[r - 1]
-                        print expected_parent[taxa[r]]
-                        print '((('
                         invalid_hierarchies[taxa[r]].add(taxa[r - 1])
                         invalid_hierarchies[taxa[r]].add(expected_parent[taxa[r]])
 
@@ -342,8 +339,6 @@ class Taxonomy(object):
                 print ''
                 print 'Taxonomy contains taxa with multiple parents:'
                 for child_taxon, parent_taxa in invalid_hierarchies.iteritems():
-                    print child_taxon
-                    print parent_taxa
                     print '%s\t%s' % (child_taxon, ', '.join(parent_taxa))
 
         return invalid_ranks, invalid_prefixes, invalid_species_name, invalid_hierarchies
@@ -379,6 +374,40 @@ class Taxonomy(object):
                     taxon_children[taxon].add(taxon_id)
 
         return taxon_children
+
+    def children(self, taxon, taxonomy):
+        """Get children of taxon.
+
+        For species, this is a list of extant taxa. For higher
+        ranks, this is named groups and does not include the
+        extant taxa.
+
+        Parameters
+        ----------
+        taxon : str
+            Named taxonomic group of interest.
+        taxonomy : d[unique_id] -> [d__<taxon>; ...; s__<taxon>]
+            Taxonomy strings indexed by unique ids.
+
+        Returns
+        -------
+        set : {child1, child2, ..., childN}
+            All children taxa for the named taxonomic group.
+        """
+
+        c = set()
+        for taxon_id, taxa in taxonomy.iteritems():
+            if taxon in taxa:
+
+                if taxon.startswith('s__'):
+                    c.add(taxon_id)
+                else:
+                    taxon_index = taxa.index(taxon)
+                    for child in taxa[taxon_index + 1:]:
+                        if len(child) > 3:  # not just an empty prefix
+                            c.add(child)
+
+        return c
 
     def read_from_tree(self, tree):
         """Obtain the taxonomy for each extant taxa as specified by internal tree labels.

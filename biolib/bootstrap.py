@@ -42,11 +42,20 @@ def bootstrap_support(input_tree, replicate_trees, output_tree):
       Name of output tree with support values.
     """
 
-    tree = dendropy.Tree.get_from_path(input_tree, schema='newick', rooting="force-unrooted", preserve_underscores=True)
-    tree.bipartitions = True
-    tree.encode_bipartitions()
+    # read tree as rooted and get descendant taxa
+    # rooted_tree = dendropy.Tree.get_from_path(input_tree, schema='newick', rooting="force-rooted", preserve_underscores=True)
+    # root_node = rooted_tree.seed_node
+    # arbitrary_child = root_node.child_nodes()[0]
+    # taxa_for_rooting = [leaf.taxon.label for leaf in arbitrary_child.leaf_iter()]
+    # print taxa_for_rooting
 
-    rep_trees = dendropy.TreeArray(taxon_namespace=tree.taxon_namespace,
+    # read tree and bootstrap replicates as unrooted, and
+    # calculate bootstrap support
+    orig_tree = dendropy.Tree.get_from_path(input_tree, schema='newick', rooting="force-unrooted", preserve_underscores=True)
+    orig_tree.bipartitions = True
+    orig_tree.encode_bipartitions()
+
+    rep_trees = dendropy.TreeArray(taxon_namespace=orig_tree.taxon_namespace,
                                     is_rooted_trees=False,
                                     ignore_edge_lengths=True,
                                     ignore_node_ages=True,
@@ -56,20 +65,27 @@ def bootstrap_support(input_tree, replicate_trees, output_tree):
                                 schema='newick',
                                 rooting="force-unrooted",
                                 preserve_underscores=True,
-                                taxon_namespace=tree.taxon_namespace)
+                                taxon_namespace=orig_tree.taxon_namespace)
 
-    rep_trees.summarize_splits_on_tree(tree,
+    rep_trees.summarize_splits_on_tree(orig_tree,
                                        is_bipartitions_updated=True,
                                        add_support_as_node_attribute=True,
                                        support_as_percentages=True)
 
-    for node in tree.internal_nodes():
+    for node in orig_tree.internal_nodes():
         if node.label:
             node.label = str(int(node.support)) + ':' + node.label
         else:
             node.label = str(int(node.support))
 
-    tree.write_to_path(output_tree, schema='newick', suppress_rooting=True, unquoted_underscores=True)
+    # now root the tree again
+    # mrca = orig_tree.mrca(taxon_labels=taxa_for_rooting)
+    # orig_tree.reroot_at_edge(mrca.edge,
+    #                         length1=0.5 * mrca.edge_length,
+    #                         length2=0.5 * mrca.edge_length,
+    #                         update_bipartitions=True)
+    # assert orig_tree.is_rooted
+    orig_tree.write_to_path(output_tree, schema='newick', suppress_rooting=True, unquoted_underscores=True)
 
 
 def bootstrap_alignment(msa, output_file, frac=1.0):
