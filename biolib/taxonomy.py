@@ -409,6 +409,55 @@ class Taxonomy(object):
 
         return c
 
+    def parents(self, taxonomy):
+        """Get parents for all taxa.
+
+        Parameters
+        ----------
+        taxonomy : d[unique_id] -> [d__<taxon>; ...; s__<taxon>]
+            Taxonomy strings indexed by unique ids.
+
+        Returns
+        -------
+        d[taxon] -> list of parent taxa in rank order
+            Parent taxa for each taxon.
+        """
+
+        p = defaultdict(list)
+        for taxon_id, taxa in taxonomy.iteritems():
+            for i, taxon in enumerate(taxa):
+                p[taxon_id] = taxa
+                if i != 0:
+                    p[taxon] = taxa[0:i]
+
+        return p
+
+    def extant_taxa_for_rank(self, rank, taxonomy):
+        """Get extant taxa for all named groups at the specified rank.
+
+        Parameters
+        ----------
+        rank : str (e.g., class or order)
+            Rank of interest
+        taxonomy : d[unique_id] -> [d__<taxon>; ...; s__<taxon>]
+            Taxonomy strings indexed by unique ids.
+
+        Returns
+        -------
+        dict : d[taxa] -> set of extant taxa
+            Extant taxa for named groups at the specified rank.
+        """
+
+        assert(rank in Taxonomy.rank_labels)
+
+        d = defaultdict(set)
+        rank_index = Taxonomy.rank_labels.index(rank)
+        for taxon_id, taxa in taxonomy.iteritems():
+            if taxa[rank_index] != Taxonomy.rank_prefixes:
+                d[taxa[rank_index]].add(taxon_id)
+
+        return d
+
     def read_from_tree(self, tree):
         """Obtain the taxonomy for each extant taxa as specified by internal tree labels.
 

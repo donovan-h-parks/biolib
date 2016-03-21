@@ -27,7 +27,7 @@ import os
 import logging
 from collections import namedtuple
 
-from biolib.external.execute import check_on_path
+from biolib.external.execute import check_dependencies
 
 """
 To do:
@@ -50,7 +50,7 @@ class Blast():
 
         self.logger = logging.getLogger()
 
-        check_on_path('blastp')
+        check_dependencies(['blastn', 'blastp', 'makeblastdb'])
 
         self.cpus = cpus
 
@@ -61,12 +61,35 @@ class Blast():
 
         self.BlastHit = namedtuple('BlastHit', """query_id
                                                 subject_id
-                                                subject_annotation
                                                 perc_identity
-                                                query_perc_aln_len
-                                                subject_perc_aln_len
+                                                aln_length
+                                                mismatch_count
+                                                gap_open_count
+                                                query_start
+                                                query_end
+                                                subject_start
+                                                subject_end
                                                 evalue
                                                 bitscore""")
+
+        self.BlastHitCustom = namedtuple('BlastHitCustom', """query_id
+                                                                query_len
+                                                                subject_id
+                                                                subject_annotation
+                                                                subject_len
+                                                                alignment_len
+                                                                perc_identity
+                                                                evalue
+                                                                bitscore""")
+
+        self.BlastHitHomologs = namedtuple('BlastHitHomologs', """query_id
+                                                                subject_id
+                                                                subject_annotation
+                                                                perc_identity
+                                                                query_perc_aln_len
+                                                                subject_perc_aln_len
+                                                                evalue
+                                                                bitscore""")
 
     def blastp(self, query_seqs, prot_db, output_file, evalue=1e-3, max_matches=500, output_fmt='standard', task='blastp'):
         """Apply blastp to query file.
@@ -138,6 +161,69 @@ class Blast():
         cmd += " -outfmt '%s'" % self.output_fmt[output_fmt]
         os.system(cmd)
 
+    def create_blastn_db(self, fasta_file):
+        """Create BLASTN database.
+
+
+        """
+
+        os.system('makeblastdb -dbtype nucl -in %s' % fasta_file)
+
+    def read_hit(self, table, table_fmt):
+        """Generator function to read hits from a blast output table.
+
+        Parameters
+        ----------
+        table : str
+            Name of table to read.
+        table_fmt : str
+            Specified output format of blast table: standard or custom.
+
+        Yields
+        ------
+        namedtuple
+            Information about blast hit.
+        """
+
+        assert(table_fmt in self.output_fmt)
+
+        if table.endswith('.gz'):
+            open_file = gzip.open
+        else:
+            open_file = open
+
+        if table_fmt == 'standard':
+            for line in open_file(table):
+                line_split = line.split('\t')
+                hit = self.BlastHit(query_id=line_split[0],
+                                subject_id=line_split[1],
+                                perc_identity=float(line_split[2]),
+                                aln_length=int(line_split[3]),
+                                mismatch_count=int(line_split[4]),
+                                gap_open_count=int(line_split[5]),
+                                query_start=int(line_split[6]),
+                                query_end=int(line_split[7]),
+                                subject_start=int(line_split[8]),
+                                subject_end=int(line_split[9]),
+                                evalue=float(line_split[10]),
+                                bitscore=float(line_split[11]))
+
+                yield hit
+        else:
+            for line in open_file(table):
+                line_split = line.split('\t')
+                hit = self.BlastHitCustom(query_id=line_split[0],
+                                            query_len=int(line_split[1]),
+                                            subject_id=line_split[2],
+                                            subject_annotation=line_split[3],
+                                            subject_len=int(line_split[4]),
+                                            alignment_len=int(line_split[5]),
+                                            perc_identity=float(line_split[6]),
+                                            evalue=float(line_split[7]),
+                                            bitscore=float(line_split[8]))
+
+                yield hit
+
     def identify_homologs(self,
                           custom_blast_table,
                           evalue_threshold,
@@ -158,7 +244,7 @@ class Blast():
 
         Returns
         -------
-        dict : d[query_id] -> BlastHit named tuple
+        dict : d[query_id] -> BlastHitCustom named tuple
             Dictionary with information about blast hits to homologs.
         """
 
@@ -183,13 +269,13 @@ class Blast():
                 if query_perc_aln_len >= perc_aln_len_threshold and subject_perc_aln_len >= perc_aln_len_threshold:
                     prev_hit = homologs.get(subject_id, None)
                     if not prev_hit or prev_hit.bitscore < bitscore:
-                        homologs[subject_id] = self.BlastHit(query_id=query_id,
-                                                                subject_id=subject_id,
-                                                                subject_annotation=subject_title,
-                                                                perc_identity=perc_identity,
-                                                                query_perc_aln_len=query_perc_aln_len,
-                                                                subject_perc_aln_len=subject_perc_aln_len,
-                                                                evalue=evalue,
-                                                                bitscore=bitscore)
+                        homologs[subject_id] = self.BlastHitHomologs(query_id=query_id,
+                                                                    subject_id=subject_id,
+                                                                    subject_annotation=subject_title,
+                                                                    perc_identity=perc_identity,
+                                                                    query_perc_aln_len=query_perc_aln_len,
+                                                                    subject_perc_aln_len=subject_perc_aln_len,
+                                                                    evalue=evalue,
+                                                                    bitscore=bitscore)
 
         return homologs
