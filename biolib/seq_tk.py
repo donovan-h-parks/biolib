@@ -276,9 +276,9 @@ def trim_seqs(seqs, min_per_taxa, min_per_bp):
     seqs : d[seq_id] -> sequence
         Aligned sequences.
     min_per_taxa : float
-        Minimum percentage of taxa required to retain a column.
+        Minimum percentage of taxa required to retain a column [0,1].
     min_per_bp : float
-        Minimum percentage of base pairs required to keep trimmed sequence.
+        Minimum percentage of base pairs required to keep trimmed sequence [0,1].
 
     Returns
     -------

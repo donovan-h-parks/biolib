@@ -22,6 +22,7 @@ __license__ = 'GPL3'
 __maintainer__ = 'Donovan Parks'
 __email__ = 'donovan.parks@gmail.com'
 
+import sys
 import logging
 from collections import defaultdict
 
@@ -197,6 +198,44 @@ class Taxonomy(object):
                 expected_parent[taxa[r]] = taxa[r - 1]
 
         return expected_parent
+
+    def extract_valid_species_name(self, taxon):
+        """Try to extract a valid species name from a taxonomic label.
+
+        A full species name should be  binomial and include a 'generic name' (genus) and
+        a 'specific epithet' (species), i.e. Escherichia coli. This method
+        assumes the two names should be separated by a space.
+
+        Parameters
+        ----------
+        taxon : str
+            Taxon label to process.
+
+        Returns
+        -------
+        str
+            Valid species name, or None.
+        """
+
+        if ' bacterium' in taxon.lower() or 'sp.' in taxon.lower():
+            return None
+
+        taxon = taxon.replace('s__', '')
+        taxon = taxon.replace('Candidatus', '')
+        taxon = taxon.replace('candidatus', '')
+
+        if not taxon or taxon[0].islower():
+            return None
+
+        taxon_split = taxon.split(' ')
+        if len(taxon_split) < 2:
+            return None
+
+        # sanity check
+        taxon = 's__' + ' '.join(taxon_split[0:2])
+        self.validate_species_name(taxon)
+
+        return taxon
 
     def validate_species_name(self, species_name, require_full=True, require_prefix=True):
         """Validate species name.
@@ -491,6 +530,10 @@ class Taxonomy(object):
                         taxa = [x.strip() for x in taxa_str.split(';')] + taxa
                 node = node.parent_node
 
+            if len(taxa) > 7:
+                self.logger.error('Invalid taxonomy string read from tree for taxon %s: %s' % (leaf.taxon.label, taxa))
+                sys.exit(-1)
+
             # check if genus name should be appended to species label
             if len(taxa) == 7:
                 genus = taxa[5][3:]
@@ -498,6 +541,7 @@ class Taxonomy(object):
                 if genus not in species:
                     taxa[6] = 's__' + genus + ' ' + species
 
+            taxa = self.fill_missing_ranks(taxa)
             taxonomy[leaf.taxon.label] = taxa
 
         return taxonomy
