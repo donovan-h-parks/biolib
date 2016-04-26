@@ -105,7 +105,7 @@ class Prodigal(object):
                 else:
                     proc_str = 'single'  # estimate parameters from data
 
-                cmd = 'prodigal -p %s -q -f gff -g %d -a %s -d %s -i %s > %s 2> /dev/null' % (proc_str,
+                cmd = 'prodigal -m -p %s -q -f gff -g %d -a %s -d %s -i %s > %s 2> /dev/null' % (proc_str,
                                                                                               translation_table,
                                                                                               aa_gene_file_tmp,
                                                                                               nt_gene_file_tmp,
@@ -243,8 +243,7 @@ class Prodigal(object):
 
                 self.progress_str = '    Finished processing %d of %d (%.2f%%) files.'
 
-            self.logger.info('')
-            self.logger.info('  Identifying genes within %s:' % file_type)
+            self.logger.info('Identifying genes within %s:' % file_type)
             progress_func = self._progress
 
         parallel = Parallel(self.cpus)

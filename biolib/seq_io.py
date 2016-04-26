@@ -480,8 +480,11 @@ def seq_lengths(fasta_file):
 
     lens = {}
     for seq_id, seq in read_fasta_seq(fasta_file):
-        lens[seq_id] = len(seq)
-
+        if seq[-1] == '*':
+            lens[seq_id] = len(seq) - 1
+        else:
+            lens[seq_id] = len(seq)
+            
     return lens
 
 

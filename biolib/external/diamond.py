@@ -60,7 +60,7 @@ class Diamond(object):
         cmd = 'diamond makedb -p %d --in %s -d %s' % (self.cpus, prot_file, db_file)
         os.system(cmd)
 
-    def blastp(self, prot_file, db_file, evalue, per_identity, max_target_seqs, diamond_daa_file):
+    def blastp(self, prot_file, db_file, evalue, per_identity, per_aln_len, max_target_seqs, diamond_daa_file):
         """Apply diamond blastp to a set of protein sequences.
 
         Parameters
@@ -73,6 +73,8 @@ class Diamond(object):
             E-value threshold used by blast.
         per_identity : float
             Percent identity threshold used by blast [0, 100].
+        per_aln_len : float
+            Percent query coverage threshold for reporting hits [0, 100].
         max_target_seqs : int
             Maximum number of hits to report per sequence.
         diamond_daa_file : str
@@ -82,14 +84,15 @@ class Diamond(object):
         if db_file.endswith('.dmnd'):
             db_file = db_file[0:db_file.rfind('.dmnd')]
 
-        cmd = "diamond blastp --seg no -p %d -t %s -q %s -d %s -e %g --id %f -k %d -a %s" % (self.cpus,
-                                                                                tempfile.gettempdir(),
-                                                                                prot_file,
-                                                                                db_file,
-                                                                                evalue,
-                                                                                per_identity,
-                                                                                max_target_seqs,
-                                                                                diamond_daa_file)
+        cmd = "diamond blastp --seg no -p %d -t %s -q %s -d %s -e %g --id %f --query-cover %f -k %d -a %s" % (self.cpus,
+                                                                                                            tempfile.gettempdir(),
+                                                                                                            prot_file,
+                                                                                                            db_file,
+                                                                                                            evalue,
+                                                                                                            per_identity,
+                                                                                                            per_aln_len,
+                                                                                                            max_target_seqs,
+                                                                                                            diamond_daa_file)
 
         os.system(cmd)
 
