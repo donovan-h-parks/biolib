@@ -45,7 +45,7 @@ class HmmModelError(Exception):
 class HMMER():
     """Wrapper for running HMMER3."""
     def __init__(self, mode="dom"):
-        self.logger = logging.getLogger()
+        self.logger = logging.getLogger('timestamp')
 
         # make sure HMMER is installed
         check_on_path('hmmsearch')

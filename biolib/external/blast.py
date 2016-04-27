@@ -48,7 +48,7 @@ class Blast():
             Number of cpus to use.
         """
 
-        self.logger = logging.getLogger()
+        self.logger = logging.getLogger('timestamp')
 
         check_dependencies(['blastn', 'blastp', 'makeblastdb'])
 

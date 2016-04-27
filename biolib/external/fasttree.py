@@ -41,7 +41,7 @@ class FastTree():
     def __init__(self, multithreaded=True):
         """Initialization."""
 
-        self.logger = logging.getLogger()
+        self.logger = logging.getLogger('timestamp')
 
         self.multithreaded = multithreaded
 

@@ -34,7 +34,7 @@ class Mafft():
 
     def __init__(self, cpus=1):
         """Initialization."""
-        self.logger = logging.getLogger()
+        self.logger = logging.getLogger('timestamp')
 
         self.cpus = cpus
 

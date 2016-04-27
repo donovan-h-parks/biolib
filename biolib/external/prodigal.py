@@ -51,7 +51,7 @@ class Prodigal(object):
             Flag indicating if progress should be reported.
         """
 
-        self.logger = logging.getLogger()
+        self.logger = logging.getLogger('timestamp')
 
         check_on_path('prodigal')
 
@@ -235,13 +235,13 @@ class Prodigal(object):
         progress_func = None
         if self.verbose:
             file_type = 'genomes'
-            self.progress_str = '    Finished processing %d of %d (%.2f%%) genomes.'
+            self.progress_str = '  Finished processing %d of %d (%.2f%%) genomes.'
             if meta:
                 file_type = 'scaffolds'
                 if len(genome_files):
                     file_type = ntpath.basename(genome_files[0])
 
-                self.progress_str = '    Finished processing %d of %d (%.2f%%) files.'
+                self.progress_str = '  Finished processing %d of %d (%.2f%%) files.'
 
             self.logger.info('Identifying genes within %s:' % file_type)
             progress_func = self._progress

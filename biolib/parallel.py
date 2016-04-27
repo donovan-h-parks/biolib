@@ -82,7 +82,8 @@ class Parallel(object):
             Number of processes to create.
 
         """
-        self.logger = logging.getLogger()
+        
+        self.logger = logging.getLogger('timestamp')
 
         self.cpus = cpus
 
@@ -198,7 +199,7 @@ class Parallel(object):
         except Exception, _err:
             print sys.exc_info()[0]
             print traceback.format_exc()
-            self.logger.warning('  [Warning] Exception encountered while processing data.')
+            self.logger.warning('Exception encountered while processing data.')
             manager_proc.terminate()
 
     def run_seqs_file(self, producer, consumer, seq_file, progress=None):
@@ -281,5 +282,5 @@ class Parallel(object):
         except Exception, _err:
             print sys.exc_info()[0]
             print traceback.format_exc()
-            self.logger.warning('  [Warning] Exception encountered while processing data.')
+            self.logger.warning('Exception encountered while processing data.')
             manager_proc.terminate()

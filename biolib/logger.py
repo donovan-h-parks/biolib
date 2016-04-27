@@ -24,7 +24,13 @@ from StringIO import StringIO
 from biolib.common import make_sure_path_exists
 
 def logger_setup(log_dir, log_file, program_name, version, silent):
-    """Set logging for application.
+    """Setup loggers.
+    
+    Two logger are setup which both print to the stdout and a 
+    log file when the log_dir is not None. The first logger is
+    named 'timestamp' and provides a timestamp with each call,
+    while the other is named 'no_timestamp' and does not prepend
+    any information.
 
     Parameters
     ----------
@@ -40,26 +46,38 @@ def logger_setup(log_dir, log_file, program_name, version, silent):
         Flag indicating if output to stdout should be suppressed.
     """
 
-    # setup general properties of logger
-    logger = logging.getLogger('')
-    logger.setLevel(logging.DEBUG)
+    # setup general properties of loggers
+    timestamp_logger = logging.getLogger('timestamp')
+    timestamp_logger.setLevel(logging.DEBUG)
     log_format = logging.Formatter(fmt="[%(asctime)s] %(levelname)s: %(message)s",
                                    datefmt="%Y-%m-%d %H:%M:%S")
+                                   
+    no_timestamp_logger = logging.getLogger('no_timestamp')
+    no_timestamp_logger.setLevel(logging.DEBUG)
 
     # setup logging to console
-    stream_logger = logging.StreamHandler(sys.stdout)
-    stream_logger.setFormatter(log_format)
-    stream_logger.setLevel(logging.DEBUG)
-    logger.addHandler(stream_logger)
+    timestamp_stream_logger = logging.StreamHandler(sys.stdout)
+    timestamp_stream_logger.setFormatter(log_format)
+    timestamp_stream_logger.setLevel(logging.DEBUG)
+    timestamp_logger.addHandler(timestamp_stream_logger)
+    
+    no_timestamp_stream_logger = logging.StreamHandler(sys.stdout)
+    no_timestamp_stream_logger.setFormatter(None)
+    no_timestamp_stream_logger.setLevel(logging.DEBUG)
+    no_timestamp_logger.addHandler(no_timestamp_stream_logger)
+    
     if silent:
-        stream_logger.setLevel(logging.ERROR)
-        sys.stdout = StringIO()
+        timestamp_stream_logger.setLevel(logging.ERROR)
 
     if log_dir:
         make_sure_path_exists(log_dir)
-        file_logger = logging.FileHandler(os.path.join(log_dir, log_file), 'a')
-        file_logger.setFormatter(log_format)
-        logger.addHandler(file_logger)
+        timestamp_file_logger = logging.FileHandler(os.path.join(log_dir, log_file), 'a')
+        timestamp_file_logger.setFormatter(log_format)
+        timestamp_logger.addHandler(timestamp_file_logger)
+        
+        no_timestamp_file_logger = logging.FileHandler(os.path.join(log_dir, log_file), 'a')
+        no_timestamp_file_logger.setFormatter(None)
+        no_timestamp_logger.addHandler(no_timestamp_file_logger)
 
-    logger.info('%s v%s' % (program_name, version))
-    logger.info(ntpath.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1:]))
+    timestamp_logger.info('%s v%s' % (program_name, version))
+    timestamp_logger.info(ntpath.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1:]))

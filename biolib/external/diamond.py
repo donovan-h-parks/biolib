@@ -40,7 +40,7 @@ class Diamond(object):
         cpus : int
             Number of cpus to use.
         """
-        self.logger = logging.getLogger()
+        self.logger = logging.getLogger('timestamp')
 
         check_on_path('diamond')
 
