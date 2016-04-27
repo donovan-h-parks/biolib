@@ -30,7 +30,8 @@ def logger_setup(log_dir, log_file, program_name, version, silent):
     log file when the log_dir is not None. The first logger is
     named 'timestamp' and provides a timestamp with each call,
     while the other is named 'no_timestamp' and does not prepend
-    any information.
+    any information. The attribution 'is_silent' is also added
+    to each logger to indicate if the silent flag is thrown.
 
     Parameters
     ----------
@@ -58,16 +59,18 @@ def logger_setup(log_dir, log_file, program_name, version, silent):
     # setup logging to console
     timestamp_stream_logger = logging.StreamHandler(sys.stdout)
     timestamp_stream_logger.setFormatter(log_format)
-    timestamp_stream_logger.setLevel(logging.DEBUG)
     timestamp_logger.addHandler(timestamp_stream_logger)
     
     no_timestamp_stream_logger = logging.StreamHandler(sys.stdout)
     no_timestamp_stream_logger.setFormatter(None)
-    no_timestamp_stream_logger.setLevel(logging.DEBUG)
     no_timestamp_logger.addHandler(no_timestamp_stream_logger)
     
+    timestamp_logger.is_silent = False
+    no_timestamp_stream_logger.is_silent = False
     if silent:
+        timestamp_logger.is_silent = True
         timestamp_stream_logger.setLevel(logging.ERROR)
+        no_timestamp_stream_logger.is_silent = True
 
     if log_dir:
         make_sure_path_exists(log_dir)

@@ -169,16 +169,16 @@ def alphanumeric_sort(l):
 def check_file_exists(input_file):
     """Check if file exists."""
     if not os.path.exists(input_file) or not os.path.isfile(input_file):
-        logger = logging.getLogger()
-        logger.error('  [Error] Input file does not exists: ' + input_file + '\n')
+        logger = logging.getLogger('timestamp')
+        logger.error('Input file does not exists: ' + input_file + '\n')
         sys.exit()
 
 
 def check_dir_exists(input_dir):
     """Check if directory exists."""
     if not os.path.exists(input_dir) or not os.path.isdir(input_dir):
-        logger = logging.getLogger()
-        logger.error('  [Error] Input directory does not exists: ' + input_dir + '\n')
+        logger = logging.getLogger('timestamp')
+        logger.error('Input directory does not exists: ' + input_dir + '\n')
         sys.exit()
 
 
@@ -194,8 +194,8 @@ def make_sure_path_exists(path):
         os.makedirs(path)
     except OSError as exception:
         if exception.errno != errno.EEXIST:
-            logger = logging.getLogger()
-            logger.error('  [Error] Specified path does not exist: ' + path + '\n')
+            logger = logging.getLogger('timestamp')
+            logger.error('Specified path does not exist: ' + path + '\n')
             sys.exit()
 
 
