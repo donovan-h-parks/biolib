@@ -46,7 +46,7 @@ class Diamond(object):
 
         self.cpus = cpus
 
-    def make_database(self, prot_file, db_file):
+    def make_database(self, prot_file, db_file, block_size=None):
         """Make diamond database.
 
         Parameters
@@ -55,12 +55,18 @@ class Diamond(object):
             Fasta file with protein sequences.
         db_file : str
             Desired name of Diamond database.
+	block_size : int
+	    Sequence block size in billions of letters.
         """
 
-        cmd = 'diamond makedb -p %d --in %s -d %s' % (self.cpus, prot_file, db_file)
+        args = ''
+        if block_size:
+            args += '-b %d' % block_size
+
+        cmd = 'diamond makedb -p %d --in %s -d %s %s' % (self.cpus, prot_file, db_file, args)
         os.system(cmd)
 
-    def blastp(self, prot_file, db_file, evalue, per_identity, per_aln_len, max_target_seqs, diamond_daa_file):
+    def blastp(self, prot_file, db_file, evalue, per_identity, per_aln_len, max_target_seqs, diamond_daa_file, tmp_dir=None, chunk_size=None):
         """Apply diamond blastp to a set of protein sequences.
 
         Parameters
@@ -79,20 +85,31 @@ class Diamond(object):
             Maximum number of hits to report per sequence.
         diamond_daa_file : str
             Desired name of Diamond data file.
+        tmp_dir : str
+            Directory to store temporary files.
+        chunk_size : int
+            Number of chunks for index processing.
         """
 
         if db_file.endswith('.dmnd'):
             db_file = db_file[0:db_file.rfind('.dmnd')]
 
-        cmd = "diamond blastp --seg no -p %d -t %s -q %s -d %s -e %g --id %f --query-cover %f -k %d -a %s" % (self.cpus,
-                                                                                                            tempfile.gettempdir(),
-                                                                                                            prot_file,
-                                                                                                            db_file,
-                                                                                                            evalue,
-                                                                                                            per_identity,
-                                                                                                            per_aln_len,
-                                                                                                            max_target_seqs,
-                                                                                                            diamond_daa_file)
+        args = ''
+        if tmp_dir:
+             args += '-t %s' % tmp_dir
+
+        if chunk_size:
+             args += ' -c %d' % chunk_size
+
+        cmd = "diamond blastp --seg no -p %d -q %s -d %s -e %g --id %f --query-cover %f -k %d -a %s %s" % (self.cpus,
+                                                                                                                    prot_file,
+                                                                                                                    db_file,
+                                                                                                                    evalue,
+                                                                                                                    per_identity,
+                                                                                                                    per_aln_len,
+                                                                                                                    max_target_seqs,
+                                                                                                                    diamond_daa_file,
+                                                                                                                    args)
 
         os.system(cmd)
 

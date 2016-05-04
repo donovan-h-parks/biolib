@@ -260,15 +260,15 @@ class Taxonomy(object):
         str
             Reason for failing validation, otherwise None.
         """
-
-        if species_name == 's__':
-            return True, None
-
+        
         # test for prefix
         if require_prefix:
             if not species_name.startswith('s__'):
                 return False, 'name is missing the species prefix'
 
+        if species_name == 's__':
+            return False, 'name is missing generic and specific names'
+            
         # remove prefix before testing other properties
         test_name = species_name
         if test_name.startswith('s__'):

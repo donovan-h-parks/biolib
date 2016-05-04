@@ -118,7 +118,7 @@ def find_nearest(array, value):
     return array[idx]
 
 
-def concatenate_files(input_files, output_file):
+def concatenate_files(input_files, output_file, common_header=False):
     """Concatenate several files into a single file.
 
     Creates a compressed file if the extension of
@@ -130,6 +130,8 @@ def concatenate_files(input_files, output_file):
         Files to concatenate.
     output_file : str
         Name of output file.
+    common_header : boolean
+        If True, only write first line of first file.
     """
 
     if output_file.endswith('.gz'):
@@ -138,14 +140,18 @@ def concatenate_files(input_files, output_file):
         open_file = open
 
     with open_file(output_file, "wb") as outfile:
-        for f in input_files:
+        for file_no, f in enumerate(input_files):
             with open(f, "rb") as infile:
-                d = infile.read()
-                outfile.write(d)
-                if d[-1] != '\n':
-                    outfile.write('\n')
+                for line_no, line in enumerate(infile):
+                    if common_header and line_no == 0:
+                        if file_no == 0:
+                            outfile.write(line)
+                        else:
+                            pass
+                    else:
+                        outfile.write(line)
 
-
+                        
 def alphanumeric_sort(l):
     """Sorts the given iterable alphanumerically.
 
@@ -195,7 +201,7 @@ def make_sure_path_exists(path):
     except OSError as exception:
         if exception.errno != errno.EEXIST:
             logger = logging.getLogger('timestamp')
-            logger.error('Specified path does not exist: ' + path + '\n')
+            logger.error('Specified path could not be created: ' + path + '\n')
             sys.exit()
 
 

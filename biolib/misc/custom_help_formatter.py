@@ -37,6 +37,7 @@ class ChangeTempAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         if os.path.isdir(values):
             tempfile.tempdir = values
+            setattr(namespace, self.dest, values)
         else:
             raise argparse.ArgumentTypeError('The value of %s must be a valid directory' % option_string)
 
