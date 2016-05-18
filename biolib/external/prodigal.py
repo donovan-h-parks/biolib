@@ -243,7 +243,7 @@ class Prodigal(object):
 
                 self.progress_str = '  Finished processing %d of %d (%.2f%%) files.'
 
-            self.logger.info('Identifying genes within %s:' % file_type)
+            self.logger.info('Identifying genes within %s: ' % file_type)
             progress_func = self._progress
 
         parallel = Parallel(self.cpus)

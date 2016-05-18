@@ -39,7 +39,7 @@ To do:
 class Blast():
     """Wrapper for running blast."""
 
-    def __init__(self, cpus):
+    def __init__(self, cpus, silent=False):
         """Initialization.
 
         Parameters
@@ -53,6 +53,7 @@ class Blast():
         check_dependencies(['blastn', 'blastp', 'makeblastdb'])
 
         self.cpus = cpus
+        self.silent = silent
 
         self.output_fmt = {'standard': '6',
                             'custom': '6 qseqid qlen sseqid stitle slen length pident evalue bitscore'}
@@ -162,12 +163,20 @@ class Blast():
         os.system(cmd)
 
     def create_blastn_db(self, fasta_file):
-        """Create BLASTN database.
+        """Create nucleotide database."""
 
+        if self.silent:
+            os.system('makeblastdb -dbtype nucl -in %s > /dev/null' % fasta_file)
+        else:
+            os.system('makeblastdb -dbtype nucl -in %s' % fasta_file)
+        
+    def create_blastp_db(self, fasta_file):
+        """Create protein database."""
 
-        """
-
-        os.system('makeblastdb -dbtype nucl -in %s' % fasta_file)
+        if self.silent:
+            os.system('makeblastdb -dbtype prot -in %s > /dev/null' % fasta_file)
+        else:
+            os.system('makeblastdb -dbtype prot -in %s' % fasta_file)
 
     def read_hit(self, table, table_fmt):
         """Generator function to read hits from a blast output table.

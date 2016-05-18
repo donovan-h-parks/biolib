@@ -261,13 +261,13 @@ class Taxonomy(object):
             Reason for failing validation, otherwise None.
         """
         
+        if species_name == 's__':
+            return True, None
+        
         # test for prefix
         if require_prefix:
             if not species_name.startswith('s__'):
                 return False, 'name is missing the species prefix'
-
-        if species_name == 's__':
-            return False, 'name is missing generic and specific names'
             
         # remove prefix before testing other properties
         test_name = species_name
@@ -276,12 +276,38 @@ class Taxonomy(object):
 
         # test for full name
         if require_full:
-            if 'candidatus' in species_name.lower():
-                if len(species_name.split(' ')) <= 2:
+            if 'candidatus' in test_name.lower():
+                if len(test_name.split(' ')) <= 2:
                     return False, 'name appears to be missing the generic name'
             else:
-                if len(species_name.split(' ')) <= 1:
+                if len(test_name.split(' ')) <= 1:
                     return False, 'name appears to be missing the generic name'
+	
+	# check for tell-tale signs on invalid species names
+	if " bacterium" in test_name.lower():
+            return False, "name contains the word 'bacterium'"
+	if " archaeon" in test_name.lower():
+	    return False, "name contains the word 'archaeon'"
+	if " archeaon" in test_name.lower():
+	    return False, "name contains the word 'archeaon'"
+	if "-like" in test_name.lower():
+	    return False, "name contains '-like'"
+        if " group " in test_name.lower():
+	    return False, "name contains 'group'"
+	if " symbiont" in test_name.lower():
+	    return False, "name contains 'symbiont'"
+	if " endosymbiont" in test_name.lower():
+	    return False, "name contains 'endosymbiont'"
+	if " taxon" in test_name.lower():
+	    return False, "name contains 'taxon'"
+	if " cluster" in test_name.lower():
+	    return False, "name contains 'cluster'"
+	if " of " in test_name.lower():
+	    return False, "name contains 'of'"
+	if test_name[0].islower():
+	    return False, 'first letter of name is lowercase'
+	if 'sp.' in test_name.lower():
+	    return False, "name contains 'sp.'"
 
         return True, None
 
