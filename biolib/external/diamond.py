@@ -63,7 +63,7 @@ class Diamond(object):
         if block_size:
             args += '-b %d' % block_size
 
-        cmd = 'diamond makedb -p %d --in %s -d %s %s' % (self.cpus, prot_file, db_file, args)
+        cmd = 'diamond makedb --quiet -p %d --in %s -d %s %s' % (self.cpus, prot_file, db_file, args)
         os.system(cmd)
 
     def blastp(self, prot_file, db_file, evalue, per_identity, per_aln_len, max_target_seqs, diamond_daa_file, tmp_dir=None, chunk_size=None):
@@ -101,7 +101,7 @@ class Diamond(object):
         if chunk_size:
              args += ' -c %d' % chunk_size
 
-        cmd = "diamond blastp --seg no -p %d -q %s -d %s -e %g --id %f --query-cover %f -k %d -a %s %s" % (self.cpus,
+        cmd = "diamond blastp --quiet --seg no -p %d -q %s -d %s -e %g --id %f --query-cover %f -k %d -a %s %s" % (self.cpus,
                                                                                                                     prot_file,
                                                                                                                     db_file,
                                                                                                                     evalue,
@@ -135,14 +135,14 @@ class Diamond(object):
         if db_file.endswith('.dmnd'):
             db_file = db_file[0:db_file.rfind('.dmnd')]
 
-        cmd = 'diamond blastx --seg no -p %d -t %s -q %s -d %s -e %f --id %f -k %d -a %s' % (self.cpus,
-                                                                                        tempfile.gettempdir(),
-                                                                                        nt_file,
-                                                                                        db_file,
-                                                                                        evalue,
-                                                                                        per_identity,
-                                                                                        max_target_seqs,
-                                                                                        diamond_daa_file)
+        cmd = 'diamond blastx --quiet --seg no -p %d -t %s -q %s -d %s -e %f --id %f -k %d -a %s' % (self.cpus,
+                                                                                                        tempfile.gettempdir(),
+                                                                                                        nt_file,
+                                                                                                        db_file,
+                                                                                                        evalue,
+                                                                                                        per_identity,
+                                                                                                        max_target_seqs,
+                                                                                                        diamond_daa_file)
 
         os.system(cmd)
 
@@ -159,8 +159,8 @@ class Diamond(object):
             Flag indicating if output table should be compressed.
         """
 
-        cmd = 'diamond view -p %d -a %s -o %s --compress %d' % (self.cpus,
-                                                                    diamond_daa_file,
-                                                                    output_table,
-                                                                    compress)
+        cmd = 'diamond view --quiet -p %d -a %s -o %s --compress %d' % (self.cpus,
+                                                                            diamond_daa_file,
+                                                                            output_table,
+                                                                            compress)
         os.system(cmd)

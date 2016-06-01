@@ -61,7 +61,7 @@ class Taxonomy(object):
     def __init__(self):
         """Initialization."""
 
-        self.logger = logging.getLogger()
+        self.logger = logging.getLogger('timestamp')
 
     def taxa(self, tax_str):
         """Taxa specified by taxonomy string.
@@ -190,10 +190,10 @@ class Taxonomy(object):
                 if taxa[r] in expected_parent:
                     if report_errors:
                         if taxa[r - 1] != expected_parent[taxa[r]]:
-                            self.logger.error('[Error] Provided taxonomy is not taxonomically consistent.')
-                            self.logger.error('[Error] Genome %s indicates the parent of %s is %s.' % (genome_id, taxa[r], taxa[r - 1]))
-                            self.logger.error('[Error] The parent of this taxa was previously indicated as %s.' % (expected_parent[taxa[r]]))
-                            return None
+                            self.logger.warning('Provided taxonomy is not taxonomically consistent.')
+                            self.logger.warning('Genome %s indicates the parent of %s is %s.' % (genome_id, taxa[r], taxa[r - 1]))
+                            self.logger.warning('The parent of this taxa was previously indicated as %s.' % (expected_parent[taxa[r]]))
+                            #return None
 
                 expected_parent[taxa[r]] = taxa[r - 1]
 
@@ -282,32 +282,32 @@ class Taxonomy(object):
             else:
                 if len(test_name.split(' ')) <= 1:
                     return False, 'name appears to be missing the generic name'
-	
-	# check for tell-tale signs on invalid species names
-	if " bacterium" in test_name.lower():
+
+        # check for tell-tale signs on invalid species names
+        if " bacterium" in test_name.lower():
             return False, "name contains the word 'bacterium'"
-	if " archaeon" in test_name.lower():
-	    return False, "name contains the word 'archaeon'"
-	if " archeaon" in test_name.lower():
-	    return False, "name contains the word 'archeaon'"
-	if "-like" in test_name.lower():
-	    return False, "name contains '-like'"
+        if " archaeon" in test_name.lower():
+            return False, "name contains the word 'archaeon'"
+        if " archeaon" in test_name.lower():
+            return False, "name contains the word 'archeaon'"
+        if "-like" in test_name.lower():
+            return False, "name contains '-like'"
         if " group " in test_name.lower():
-	    return False, "name contains 'group'"
-	if " symbiont" in test_name.lower():
-	    return False, "name contains 'symbiont'"
-	if " endosymbiont" in test_name.lower():
-	    return False, "name contains 'endosymbiont'"
-	if " taxon" in test_name.lower():
-	    return False, "name contains 'taxon'"
-	if " cluster" in test_name.lower():
-	    return False, "name contains 'cluster'"
-	if " of " in test_name.lower():
-	    return False, "name contains 'of'"
-	if test_name[0].islower():
-	    return False, 'first letter of name is lowercase'
-	if 'sp.' in test_name.lower():
-	    return False, "name contains 'sp.'"
+            return False, "name contains 'group'"
+        if " symbiont" in test_name.lower():
+            return False, "name contains 'symbiont'"
+        if " endosymbiont" in test_name.lower():
+            return False, "name contains 'endosymbiont'"
+        if " taxon" in test_name.lower():
+            return False, "name contains 'taxon'"
+        if " cluster" in test_name.lower():
+            return False, "name contains 'cluster'"
+        if " of " in test_name.lower():
+            return False, "name contains 'of'"
+        if test_name[0].islower():
+            return False, 'first letter of name is lowercase'
+        if 'sp.' in test_name.lower():
+            return False, "name contains 'sp.'"
 
         return True, None
 
