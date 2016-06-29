@@ -19,7 +19,5 @@ setup(
     license='GPL3',
     description='Package for common tasks in bioinformatic.',
     long_description=open('README.md').read(),
-    install_requires=[
-          "numpy >= 1.8.0",
-          "dendropy >= 4.0.0"],
+    install_requires=[],
 )

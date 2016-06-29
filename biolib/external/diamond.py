@@ -55,8 +55,8 @@ class Diamond(object):
             Fasta file with protein sequences.
         db_file : str
             Desired name of Diamond database.
-	block_size : int
-	    Sequence block size in billions of letters.
+        block_size : int
+            Sequence block size in billions of letters.
         """
 
         args = ''
