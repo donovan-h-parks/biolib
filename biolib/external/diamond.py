@@ -66,7 +66,7 @@ class Diamond(object):
         cmd = 'diamond makedb --quiet -p %d --in %s -d %s %s' % (self.cpus, prot_file, db_file, args)
         os.system(cmd)
 
-    def blastp(self, prot_file, db_file, evalue, per_identity, per_aln_len, max_target_seqs, diamond_daa_file, tmp_dir=None, chunk_size=None):
+    def blastp(self, prot_file, db_file, evalue, per_identity, per_aln_len, max_target_seqs, output_file, output_fmt='tab', tmp_dir=None, chunk_size=None):
         """Apply diamond blastp to a set of protein sequences.
 
         Parameters
@@ -83,8 +83,10 @@ class Diamond(object):
             Percent query coverage threshold for reporting hits [0, 100].
         max_target_seqs : int
             Maximum number of hits to report per sequence.
-        diamond_daa_file : str
-            Desired name of Diamond data file.
+        output_file : str
+            Desired name of output file.
+        output_fmt : str
+            Desired output format (tab/sam/xml/daa)
         tmp_dir : str
             Directory to store temporary files.
         chunk_size : int
@@ -101,14 +103,15 @@ class Diamond(object):
         if chunk_size:
              args += ' -c %d' % chunk_size
 
-        cmd = "diamond blastp --quiet --seg no -p %d -q %s -d %s -e %g --id %f --query-cover %f -k %d -a %s %s" % (self.cpus,
+        cmd = "diamond blastp --quiet --seg no -p %d -q %s -d %s -e %g --id %f --query-cover %f -k %d -o %s -f %s %s" % (self.cpus,
                                                                                                                     prot_file,
                                                                                                                     db_file,
                                                                                                                     evalue,
                                                                                                                     per_identity,
                                                                                                                     per_aln_len,
                                                                                                                     max_target_seqs,
-                                                                                                                    diamond_daa_file,
+                                                                                                                    output_file,
+                                                                                                                    output_fmt,
                                                                                                                     args)
 
         os.system(cmd)
