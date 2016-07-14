@@ -46,7 +46,7 @@ class Diamond(object):
 
         self.cpus = cpus
 
-    def make_database(self, prot_file, db_file, block_size=None):
+    def make_database(self, prot_file, db_file):
         """Make diamond database.
 
         Parameters
@@ -55,18 +55,12 @@ class Diamond(object):
             Fasta file with protein sequences.
         db_file : str
             Desired name of Diamond database.
-        block_size : int
-            Sequence block size in billions of letters.
         """
 
-        args = ''
-        if block_size:
-            args += '-b %d' % block_size
-
-        cmd = 'diamond makedb --quiet -p %d --in %s -d %s %s' % (self.cpus, prot_file, db_file, args)
+        cmd = 'diamond makedb --quiet -p %d --in %s -d %s' % (self.cpus, prot_file, db_file)
         os.system(cmd)
 
-    def blastp(self, prot_file, db_file, evalue, per_identity, per_aln_len, max_target_seqs, output_file, output_fmt='tab', tmp_dir=None, chunk_size=None):
+    def blastp(self, prot_file, db_file, evalue, per_identity, per_aln_len, max_target_seqs, output_file, output_fmt='tab', tmp_dir=None, chunk_size=None, block_size=None):
         """Apply diamond blastp to a set of protein sequences.
 
         Parameters
@@ -91,6 +85,8 @@ class Diamond(object):
             Directory to store temporary files.
         chunk_size : int
             Number of chunks for index processing.
+        block_size : int
+            Sequence block size in billions of letters.
         """
 
         if db_file.endswith('.dmnd'):
@@ -102,6 +98,9 @@ class Diamond(object):
 
         if chunk_size:
              args += ' -c %d' % chunk_size
+             
+        if block_size:
+            args += ' -b %d' % block_size
 
         cmd = "diamond blastp --quiet --seg no -p %d -q %s -d %s -e %g --id %f --query-cover %f -k %d -o %s -f %s %s" % (self.cpus,
                                                                                                                     prot_file,

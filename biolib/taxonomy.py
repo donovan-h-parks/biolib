@@ -596,7 +596,7 @@ class Taxonomy(object):
         for line in open(taxonomy_file):
             line_split = line.split('\t')
             unique_id = line_split[0]
-
+            
             tax_str = line_split[1].rstrip()
             if tax_str[-1] == ';':
                 # remove trailing semicolons which sometimes

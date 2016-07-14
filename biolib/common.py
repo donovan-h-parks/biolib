@@ -150,6 +150,10 @@ def concatenate_files(input_files, output_file, common_header=False):
                             pass
                     else:
                         outfile.write(line)
+                        
+                # force newline between files
+                if line[-1] != '\n':
+                    outfile.write('\n')
 
                         
 def alphanumeric_sort(l):
