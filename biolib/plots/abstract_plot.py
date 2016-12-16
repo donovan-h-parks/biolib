@@ -38,6 +38,8 @@ import numpy as np
 
 class AbstractPlot(FigureCanvas):
     """Abstract base class for plotting."""
+    
+    Options = namedtuple('Options', 'width height label_font_size tick_font_size dpi')
 
     def __init__(self, options):
         """Initialization."""
@@ -45,10 +47,10 @@ class AbstractPlot(FigureCanvas):
         if options:
             self.options = options
         else:
-            Options = namedtuple('Options', 'width height font_size dpi')
-            self.options = Options(6, 6, 10, 300)
+            Options = namedtuple('Options', 'width height label_font_size tick_font_size dpi')
+            self.options = Options(6, 6, 10, 8, 300)
 
-        self.set_font_size(self.options.font_size)
+        self.set_font_size(self.options.label_font_size, self.options.tick_font_size)
         self.fig = Figure(facecolor='white', dpi=self.options.dpi)
 
         FigureCanvas.__init__(self, self.fig)
@@ -60,14 +62,14 @@ class AbstractPlot(FigureCanvas):
 
         self.axes_colour = (0.5, 0.5, 0.5)
 
-    def set_font_size(self, size):
+    def set_font_size(self, label_size, tick_size):
         """Set font size for all text elements."""
-        mpl.rcParams['font.size'] = size
-        mpl.rcParams['axes.titlesize'] = size
-        mpl.rcParams['axes.labelsize'] = size
-        mpl.rcParams['xtick.labelsize'] = size
-        mpl.rcParams['ytick.labelsize'] = size
-        mpl.rcParams['legend.fontsize'] = size
+        mpl.rcParams['font.size'] = label_size
+        mpl.rcParams['axes.titlesize'] = label_size
+        mpl.rcParams['axes.labelsize'] = label_size
+        mpl.rcParams['xtick.labelsize'] = tick_size
+        mpl.rcParams['ytick.labelsize'] = tick_size
+        mpl.rcParams['legend.fontsize'] = label_size
         mpl.rcParams['svg.fonttype'] = 'none'
 
     def save_plot(self, filename, dpi=300):

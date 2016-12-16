@@ -191,10 +191,10 @@ def read_fasta(fasta_file, keep_annotation=False):
 
                 seqs[seq_id] = []
             else:
-                seqs[seq_id].append(line[0:-1])
+                seqs[seq_id].append(line.strip())
 
         for seq_id, seq in seqs.iteritems():
-            seqs[seq_id] = ''.join(seq)
+            seqs[seq_id] = ''.join(seq).replace(' ', '')
     except:
         print traceback.format_exc()
         print ''
@@ -237,7 +237,7 @@ def read_fastq(fastq_file):
             if line_num == 1:
                 seq_id = line[1:].split(None, 1)[0]
             elif line_num == 2:
-                seqs[seq_id].seq = line[0:-1]
+                seqs[seq_id].seq = line.strip()
             elif line_num == 4:
                 line_num = 0
     except:
@@ -336,9 +336,9 @@ def read_fasta_seq(fasta_file, keep_annotation=False):
             if line[0] == '>':
                 if seq_id != None:
                     if keep_annotation:
-                        yield seq_id, ''.join(seq), annotation
+                        yield seq_id, ''.join(seq).replace(' ', ''), annotation
                     else:
-                        yield seq_id, ''.join(seq)
+                        yield seq_id, ''.join(seq).replace(' ', '')
 
                 line_split = line[1:-1].split(None, 1)
                 if len(line_split) == 2:
@@ -348,13 +348,13 @@ def read_fasta_seq(fasta_file, keep_annotation=False):
                     annotation = ''
                 seq = []
             else:
-                seq.append(line[0:-1])
+                seq.append(line.strip())
 
         # report last sequence
         if keep_annotation:
-            yield seq_id, ''.join(seq), annotation
+            yield seq_id, ''.join(seq).replace(' ', ''), annotation
         else:
-            yield seq_id, ''.join(seq)
+            yield seq_id, ''.join(seq).replace(' ', '')
     except GeneratorExit:
         pass
     except:
@@ -406,7 +406,7 @@ def read_fastq_seq(fastq_file):
             if line_num == 1:
                 seq_id = line[1:].split(None, 1)[0]
             elif line_num == 2:
-                yield seq_id, line[0:-1]
+                yield seq_id, line.strip()
             elif line_num == 4:
                 line_num = 0
     except GeneratorExit:
@@ -450,10 +450,10 @@ def extract_seqs(fasta_file, seqs_to_extract):
                 seqs[seq_id] = []
                 seq_of_interest = True
         elif seq_of_interest:
-            seqs[seq_id].append(line[0:-1])
+            seqs[seq_id].append(line.strip())
 
     for seq_id, seq in seqs.iteritems():
-        seqs[seq_id] = ''.join(seq)
+        seqs[seq_id] = ''.join(seq).replace(' ', '')
 
     return seqs
 

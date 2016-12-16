@@ -270,15 +270,15 @@ class Blast():
             perc_identity = float(line_split[6])
             evalue = float(line_split[7])
             bitscore = float(line_split[8])
-
+            
             if evalue <= evalue_threshold and perc_identity >= perc_identity_threshold:
                 query_perc_aln_len = align_len * 100.0 / query_len
                 subject_perc_aln_len = align_len * 100.0 / subject_len
 
                 if query_perc_aln_len >= perc_aln_len_threshold and subject_perc_aln_len >= perc_aln_len_threshold:
-                    prev_hit = homologs.get(subject_id, None)
-                    if not prev_hit or prev_hit.bitscore < bitscore:
-                        homologs[subject_id] = self.BlastHitHomologs(query_id=query_id,
+                    prev_hit = homologs.get(query_id, None)
+                    if not prev_hit or bitscore > prev_hit.bitscore:
+                        homologs[query_id] = self.BlastHitHomologs(query_id=query_id,
                                                                     subject_id=subject_id,
                                                                     subject_annotation=subject_title,
                                                                     perc_identity=perc_identity,

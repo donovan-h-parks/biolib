@@ -178,7 +178,7 @@ class FastTree():
         """
 
         assert(seq_type in ['nt', 'prot'])
-        assert(model_str in ['wag', 'jtt'])
+        assert(model_str in ['wag', 'lg', 'jtt'])
 
         if seq_type == 'prot':
             seq_type_str = ''
@@ -186,6 +186,8 @@ class FastTree():
                 model_str = ''
             elif model_str.upper() == 'WAG':
                 model_str = '-wag'
+            elif model_str.upper() == 'LG':
+                model_str = '-lg'
         elif seq_type == 'nt':
             seq_type_str = '-nt'
             model_str = '-gtr'
