@@ -253,7 +253,7 @@ class Blast():
 
         Returns
         -------
-        dict : d[query_id] -> BlastHitCustom named tuple
+        dict : d[subject_id] -> BlastHitCustom named tuple
             Dictionary with information about blast hits to homologs.
         """
 
@@ -276,9 +276,9 @@ class Blast():
                 subject_perc_aln_len = align_len * 100.0 / subject_len
 
                 if query_perc_aln_len >= perc_aln_len_threshold and subject_perc_aln_len >= perc_aln_len_threshold:
-                    prev_hit = homologs.get(query_id, None)
+                    prev_hit = homologs.get(subject_id, None)
                     if not prev_hit or bitscore > prev_hit.bitscore:
-                        homologs[query_id] = self.BlastHitHomologs(query_id=query_id,
+                        homologs[subject_id] = self.BlastHitHomologs(query_id=query_id,
                                                                     subject_id=subject_id,
                                                                     subject_annotation=subject_title,
                                                                     perc_identity=perc_identity,

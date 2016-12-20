@@ -45,6 +45,10 @@ class Diamond(object):
         check_on_path('diamond')
 
         self.cpus = cpus
+        
+        self.output_fmt = { 'diamond_daa': '100',
+                            'standard': '6',
+                            'custom': '6 qseqid qlen sseqid stitle slen length pident evalue bitscore'}
 
     def make_database(self, prot_file, db_file):
         """Make diamond database.
@@ -60,7 +64,7 @@ class Diamond(object):
         cmd = 'diamond makedb --quiet -p %d --in %s -d %s' % (self.cpus, prot_file, db_file)
         os.system(cmd)
 
-    def blastp(self, prot_file, db_file, evalue, per_identity, per_aln_len, max_target_seqs, output_file, output_fmt='tab', tmp_dir=None, chunk_size=None, block_size=None):
+    def blastp(self, prot_file, db_file, evalue, per_identity, per_aln_len, max_target_seqs, output_file, output_fmt='standard', tmp_dir=None, chunk_size=None, block_size=None):
         """Apply diamond blastp to a set of protein sequences.
 
         Parameters
@@ -80,7 +84,7 @@ class Diamond(object):
         output_file : str
             Desired name of output file.
         output_fmt : str
-            Desired output format (tab/sam/xml/daa)
+            Desired output format (diamond_daa, standard, custom)
         tmp_dir : str
             Directory to store temporary files.
         chunk_size : int
@@ -88,6 +92,8 @@ class Diamond(object):
         block_size : int
             Sequence block size in billions of letters.
         """
+        
+        assert(output_fmt in self.output_fmt)
 
         if db_file.endswith('.dmnd'):
             db_file = db_file[0:db_file.rfind('.dmnd')]
@@ -110,7 +116,7 @@ class Diamond(object):
                                                                                                                     per_aln_len,
                                                                                                                     max_target_seqs,
                                                                                                                     output_file,
-                                                                                                                    output_fmt,
+                                                                                                                    self.output_fmt[output_fmt],
                                                                                                                     args)
 
         os.system(cmd)
