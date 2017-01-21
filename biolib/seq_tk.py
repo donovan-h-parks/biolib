@@ -24,6 +24,7 @@ __email__ = 'donovan.parks@gmail.com'
 
 
 import string
+from collections import Counter
 
 
 """Sequence manipulation and statistics."""
@@ -268,54 +269,75 @@ def fragment(seq, window_size, step_size):
     return fragments
 
 
-def trim_seqs(seqs, min_per_taxa, min_per_bp):
-    """Trim multiple sequence alignment.
+def trim_seqs(seqs, min_per_taxa, consensus, min_per_bp):
+        """Trim multiple sequence alignment.
 
-    Parameters
-    ----------
-    seqs : d[seq_id] -> sequence
-        Aligned sequences.
-    min_per_taxa : float
-        Minimum percentage of taxa required to retain a column [0,1].
-    min_per_bp : float
-        Minimum percentage of base pairs required to keep trimmed sequence [0,1].
+        Adapted from the biolib package.
 
-    Returns
-    -------
-    dict : d[seq_id] -> sequence
-        Dictionary of trimmed sequences.
-    dict : d[seq_id] -> sequence
-        Dictionary of pruned sequences.
-    """
+        Parameters
+        ----------
+        seqs : d[seq_id] -> sequence
+            Aligned sequences.
+        min_per_taxa : float
+            Minimum percentage of taxa required to retain a column [0,1].
+        min_per_bp : float
+            Minimum percentage of base pairs required to keep trimmed sequence [0,1].
+        Returns
+        -------
+        dict : d[seq_id] -> sequence
+            Dictionary of trimmed sequences.
+        dict : d[seq_id] -> sequence
+            Dictionary of pruned sequences.
+        int 
+            Number of columns filtered by minimum percentage of taxa.
+        int 
+            Number of columns filtered by consensus
+        """
 
-    alignment_length = len(seqs.values()[0])
+        alignment_length = len(seqs.values()[0])
 
-    # count number of taxa represented in each column
-    column_count = [0] * alignment_length
-    for seq in seqs.values():
-        for i, ch in enumerate(seq):
-            if ch != '.' and ch != '-':
-                column_count[i] += 1
+        # count number of taxa represented in each column
+        column_count = [0] * alignment_length
+        column_chars = [list() for _ in xrange(alignment_length)]
+        for seq in seqs.values():
+            for i, ch in enumerate(seq):
+                if ch != '.' and ch != '-':
+                    column_count[i] += 1
+                    column_chars[i].append(ch)
 
-    mask = [False] * alignment_length
-    for i, count in enumerate(column_count):
-        if count >= min_per_taxa * len(seqs):
-            mask[i] = True
+        mask = [False] * alignment_length
+        count_min_taxa_filtered = 0
+        count_consensus_filtered = 0
+        for i, count in enumerate(column_count):
+            if count >= min_per_taxa * len(seqs):
+                c = Counter(column_chars[i])
+                if len(c.most_common(1)) == 0:
+                    ratio = 0
+                else:
+                    _letter, count = c.most_common(1)[0]
+                    ratio = float(count) / column_count[i]
+                    
+                if ratio >= consensus:
+                    mask[i] = True
+                else:
+                    count_consensus_filtered += 1
+            else:
+                count_min_taxa_filtered += 1
 
-    # trim columns
-    output_seqs = {}
-    pruned_seqs = {}
-    for seq_id, seq in seqs.iteritems():
-        masked_seq = ''.join([seq[i] for i in xrange(0, len(mask)) if mask[i]])
+        # trim columns
+        output_seqs = {}
+        pruned_seqs = {}
+        for seq_id, seq in seqs.iteritems():
+            masked_seq = ''.join([seq[i] for i in xrange(0, len(mask)) if mask[i]])
 
-        valid_bases = len(masked_seq) - masked_seq.count('.') - masked_seq.count('-')
-        if valid_bases < len(masked_seq) * min_per_bp:
-            pruned_seqs[seq_id] = masked_seq
-            continue
+            valid_bases = len(masked_seq) - masked_seq.count('.') - masked_seq.count('-')
+            if valid_bases < len(masked_seq) * min_per_bp:
+                pruned_seqs[seq_id] = masked_seq
+                continue
 
-        output_seqs[seq_id] = masked_seq
+            output_seqs[seq_id] = masked_seq
 
-    return output_seqs, pruned_seqs
+        return output_seqs, pruned_seqs, count_min_taxa_filtered, count_consensus_filtered
 
 
 def aai(seq1, seq2):

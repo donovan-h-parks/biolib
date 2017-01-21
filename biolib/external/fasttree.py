@@ -71,8 +71,8 @@ class FastTree():
             Number of cpus to use.
         """
 
-        assert(seq_type in ['nt', 'prot'])
-        assert(model_str in ['wag', 'jtt'])
+        assert(seq_type.upper() in ['NT', 'PROT'])
+        assert(model_str.upper() in ['WAG', 'LG', 'JTT'])
 
         self.replicate_dir = tempfile.mkdtemp()
         self.seq_type = seq_type
@@ -127,8 +127,8 @@ class FastTree():
             Prefix for all output files.
         """
 
-        assert(seq_type in ['nt', 'prot'])
-        assert(model_str in ['wag', 'jtt'])
+        assert(seq_type.upper() in ['NT', 'PROT'])
+        assert(model_str.upper() in ['WAG', 'LG', 'JTT'])
 
         self.output_dir = output_dir
         self.seq_type = seq_type
@@ -168,7 +168,7 @@ class FastTree():
         seq_type : str
             Specifies multiple sequences alignment is of 'nt' or 'prot'.
         model_str : str
-            Specified either the 'wag' or 'jtt' model.
+            Specified either the 'wag', 'lg', or 'jtt' model.
         output_tree: str
             Output file containing inferred tree.
         output_tree_log: str
@@ -177,8 +177,8 @@ class FastTree():
             Output file containing information about running of FastTree.
         """
 
-        assert(seq_type in ['nt', 'prot'])
-        assert(model_str in ['wag', 'lg', 'jtt'])
+        assert(seq_type.upper() in ['NT', 'PROT'])
+        assert(model_str.upper() in ['WAG', 'LG', 'JTT'])
 
         if seq_type == 'prot':
             seq_type_str = ''
