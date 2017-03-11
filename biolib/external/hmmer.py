@@ -126,9 +126,9 @@ class HMMERParser():
         """Process each hit in the file."""
         while 1:
             if self.mode == 'domtblout':
-                hit = self.readHitsDOM()
+                hit = self.read_hits_domain_table()
             elif self.mode == 'tblout':
-                hit = self.readHitsTBL()
+                hit = self.read_hits_table()
             else:
                 raise HMMERError("Mode %s not understood" % self.mode)
 
@@ -389,4 +389,3 @@ class HmmModelParser(object):
                             raise HmmModelError
                     else:
                         headerKeys[fields[0].lower()] = fields[1]
-

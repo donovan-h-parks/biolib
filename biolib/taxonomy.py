@@ -128,6 +128,30 @@ class Taxonomy(object):
                 return False
 
         return True
+        
+    def fill_trailing_ranks(self, taxa):
+        """Fill in missing trailing ranks in a taxonomy string.
+
+        Parameters
+        ----------
+        list : [d__<taxon>, ..., s__<taxon>]
+            List of taxa.
+
+        Returns
+        -------
+        list
+            List of taxa with filled trailing ranks.
+        """
+        
+        if not taxa:
+            return ';'.join(Taxonomy.rank_prefixes)
+            
+        last_rank = Taxonomy.rank_prefixes.index(taxa[-1][0:3])
+        
+        for i in xrange(last_rank+1, len(Taxonomy.rank_prefixes)):
+            taxa.append(Taxonomy.rank_prefixes[i])
+            
+        return taxa
 
     def fill_missing_ranks(self, taxa):
         """Fill in any missing ranks in a taxonomy string.
@@ -561,12 +585,12 @@ class Taxonomy(object):
 
         return p
 
-    def extant_taxa_for_rank(self, rank, taxonomy):
+    def extant_taxa_for_rank(self, rank_label, taxonomy):
         """Get extant taxa for all named groups at the specified rank.
 
         Parameters
         ----------
-        rank : str (e.g., class or order)
+        rank_label : str (e.g., class or order)
             Rank of interest
         taxonomy : d[unique_id] -> [d__<taxon>; ...; s__<taxon>]
             Taxonomy strings indexed by unique ids.
@@ -577,12 +601,12 @@ class Taxonomy(object):
             Extant taxa for named groups at the specified rank.
         """
 
-        assert(rank in Taxonomy.rank_labels)
+        assert(rank_label in Taxonomy.rank_labels)
 
         d = defaultdict(set)
-        rank_index = Taxonomy.rank_labels.index(rank)
+        rank_index = Taxonomy.rank_labels.index(rank_label)
         for taxon_id, taxa in taxonomy.iteritems():
-            if taxa[rank_index] != Taxonomy.rank_prefixes:
+            if taxa[rank_index] != Taxonomy.rank_prefixes[rank_index]:
                 d[taxa[rank_index]].add(taxon_id)
 
         return d
@@ -645,7 +669,10 @@ class Taxonomy(object):
         """
 
         if isinstance(tree, basestring):
-            tree = dendropy.Tree.get_from_path(tree, schema='newick', rooting="force-rooted", preserve_underscores=True)
+            tree = dendropy.Tree.get_from_path(tree, 
+                                                schema='newick', 
+                                                rooting="force-rooted", 
+                                                preserve_underscores=True)
 
         taxonomy = {}
         for leaf in tree.leaf_node_iter():
@@ -670,8 +697,8 @@ class Taxonomy(object):
                 node = node.parent_node
 
             if len(taxa) > 7:
-                self.logger.error('Invalid taxonomy string read from tree for taxon %s: %s' % (leaf.taxon.label, taxa))
-                sys.exit(-1)
+                self.logger.warning('Invalid taxonomy string read from tree for taxon %s: %s' % (leaf.taxon.label, taxa))
+                #sys.exit(-1)
 
             # check if genus name should be appended to species label
             if len(taxa) == 7:
@@ -680,7 +707,7 @@ class Taxonomy(object):
                 if genus not in species:
                     taxa[6] = 's__' + genus + ' ' + species
 
-            taxa = self.fill_missing_ranks(taxa)
+            taxa = self.fill_trailing_ranks(taxa)
             taxonomy[leaf.taxon.label] = taxa
 
         return taxonomy

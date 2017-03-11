@@ -50,7 +50,7 @@ class FastTree():
         else:
             check_on_path('FastTree')
 
-    def bootstrap(self, input_tree, msa_file, seq_type, model_str, num_replicates, output_tree, cpus):
+    def bootstrap(self, input_tree, msa_file, seq_type, model_str, num_replicates, output_dir, cpus):
         """Perform non-parametric bootstrapping.
 
         Parameters
@@ -65,8 +65,8 @@ class FastTree():
             Specified either the 'wag' or 'jtt' model.
         num_replicates : int
             Number of replicates to perform.
-        output_tree: str
-            Output file containing tree with bootstrap values.
+        output_dir: str
+            Output directory to contain bootstrap trees.
         cpus : int
             Number of cpus to use.
         """
@@ -74,7 +74,7 @@ class FastTree():
         assert(seq_type.upper() in ['NT', 'PROT'])
         assert(model_str.upper() in ['WAG', 'LG', 'JTT'])
 
-        self.replicate_dir = tempfile.mkdtemp()
+        self.output_dir = output_dir
         self.seq_type = seq_type
         self.model = model_str
         self.msa = seq_io.read(msa_file)
@@ -86,13 +86,15 @@ class FastTree():
         # calculate support values
         rep_tree_files = []
         for rep_index in xrange(num_replicates):
-            rep_tree_files.append(os.path.join(self.replicate_dir, 'bootstrap.tree.' + str(rep_index) + '.tre'))
+            rep_tree_files.append(os.path.join(self.output_dir, 'rep_%d' % rep_index, 'bootstrap.tree'))
 
+        tree_name = os.path.splitext(os.path.basename(input_tree))[0]
+        output_tree = os.path.join(output_dir, tree_name + '.bootstrap.tree')
         bootstrap_support(input_tree, rep_tree_files, output_tree)
+        
+        return output_tree
 
-        shutil.rmtree(self.replicate_dir)
-
-    def _bootstrap(self, replicated_num):
+    def _bootstrap(self, rep_num):
         """Infer tree from bootstrapped multiple sequence alignment.
 
         Parameters
@@ -102,13 +104,17 @@ class FastTree():
         cpus : int
             Number of cpus to use.
         """
+        
+        rep_dir = os.path.join(self.output_dir, 'rep_%d' % rep_num)
+        if not os.path.exists(rep_dir):
+            os.makedirs(rep_dir)
 
-        output_msa = os.path.join(self.replicate_dir, 'bootstrap.msa.' + str(replicated_num) + '.fna')
+        output_msa = os.path.join(rep_dir, 'bootstrap.afa')
         bootstrap_alignment(self.msa, output_msa)
 
-        output_tree = os.path.join(self.replicate_dir, 'bootstrap.tree.' + str(replicated_num) + '.tre')
-        fast_tree_output = os.path.join(self.replicate_dir, 'bootstrap.fasttree.' + str(replicated_num) + '.out')
-        self.run(output_msa, self.seq_type, self.model, output_tree, fast_tree_output)
+        output_tree = os.path.join(rep_dir, 'bootstrap.tree')
+        log_file = os.path.join(rep_dir, 'fasttree.log')
+        self.run(output_msa, self.seq_type, self.model, output_tree, log_file)
 
         return True
 

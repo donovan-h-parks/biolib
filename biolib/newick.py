@@ -80,9 +80,9 @@ def create_label(support, taxon, auxiliary_info):
     """
     
     label = ''
-    if support and taxon:
+    if support is not None and taxon:
         label = str(support) + ':' + taxon
-    elif support:
+    elif support is not None:
         label = str(support)
     elif taxon:
         label = taxon
