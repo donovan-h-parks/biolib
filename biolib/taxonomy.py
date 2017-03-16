@@ -443,6 +443,7 @@ class Taxonomy(object):
             
         # check for inconsistencies in the taxonomic hierarchy
         invalid_hierarchies = defaultdict(set)
+        missing_parent = set()
         if check_hierarchy:
             expected_parent = self.taxonomic_consistency(taxonomy, False)
             for taxon_id, taxa in taxonomy.iteritems():
@@ -452,8 +453,10 @@ class Taxonomy(object):
 
                     if r == self.rank_index['s__'] and not check_species:
                         continue
-
-                    if taxa[r - 1] != expected_parent[taxa[r]]:
+                        
+                    if taxa[r] not in expected_parent:
+                        missing_parent.add(taxa[r])
+                    elif taxa[r - 1] != expected_parent[taxa[r]]:
                         invalid_hierarchies[taxa[r]].add(taxa[r - 1])
                         invalid_hierarchies[taxa[r]].add(expected_parent[taxa[r]])
 
@@ -487,6 +490,12 @@ class Taxonomy(object):
                 print 'Taxonomy contains identical taxon names in multiple lineages:'
                 for duplicate_name in invalid_duplicate_name.keys():
                     print '%s' % duplicate_name
+                    
+            if len(missing_parent):
+                print ''
+                print 'Taxonomy contains taxa with an undefined parent:'
+                for taxon in missing_parent:
+                    print '%s' % taxon
 
             if len(invalid_hierarchies):
                 print ''
