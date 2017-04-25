@@ -104,7 +104,7 @@ def ambiguous_nucleotides(seq):
 
 
 def rev_comp(seq):
-    """Rverse complement a sequence."""
+    """Reverse complement a sequence."""
     return seq.translate(_complements)[::-1]
 
 

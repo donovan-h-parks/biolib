@@ -104,13 +104,18 @@ class Prodigal(object):
                     proc_str = 'meta'  # use best precalculated parameters
                 else:
                     proc_str = 'single'  # estimate parameters from data
+                    
+                args = '-m'
+                if self.closed_ends:
+                    args += ' -c'
 
-                cmd = 'prodigal -m -p %s -q -f gff -g %d -a %s -d %s -i %s > %s 2> /dev/null' % (proc_str,
-                                                                                              translation_table,
-                                                                                              aa_gene_file_tmp,
-                                                                                              nt_gene_file_tmp,
-                                                                                              genome_file,
-                                                                                              gff_file_tmp)
+                cmd = 'prodigal %s -p %s -q -f gff -g %d -a %s -d %s -i %s > %s 2> /dev/null' % (args,
+                                                                                            proc_str,
+                                                                                            translation_table,
+                                                                                            aa_gene_file_tmp,
+                                                                                            nt_gene_file_tmp,
+                                                                                            genome_file,
+                                                                                            gff_file_tmp)
                 os.system(cmd)
 
                 # determine coding density
@@ -194,7 +199,13 @@ class Prodigal(object):
 
         return self.progress_str % (processed_items, total_items, float(processed_items) * 100 / total_items)
 
-    def run(self, genome_files, output_dir, called_genes=False, translation_table=None, meta=False):
+    def run(self, 
+                genome_files, 
+                output_dir, 
+                called_genes=False, 
+                translation_table=None, 
+                meta=False,
+                closed_ends=False):
         """Call genes with Prodigal.
 
         Call genes with prodigal and store the results in the
@@ -214,6 +225,8 @@ class Prodigal(object):
             select between tables 4 and 11.
         meta : boolean
             Flag indicating if prodigal should call genes with the metagenomics procedure.
+        closed_ends : boolean
+            If True, do not allow genes to run off edges (throws -c flag).
         output_dir : str
             Directory to store called genes.
 
@@ -228,6 +241,7 @@ class Prodigal(object):
         self.called_genes = called_genes
         self.translation_table = translation_table
         self.meta = meta
+        self.closed_ends = closed_ends
         self.output_dir = output_dir
 
         make_sure_path_exists(self.output_dir)

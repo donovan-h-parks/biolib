@@ -26,8 +26,9 @@ import random
 
 import dendropy
 
-"""Perform non-parametric bootstrapping on multiple sequence alignment."""
+from biolib.newick import parse_label, create_label
 
+"""Perform non-parametric bootstrapping on multiple sequence alignment."""
 
 def bootstrap_support(input_tree, replicate_trees, output_tree):
     """ Calculate support for tree with replicates covering the same taxon set.
@@ -41,17 +42,12 @@ def bootstrap_support(input_tree, replicate_trees, output_tree):
     output_tree: str
       Name of output tree with support values.
     """
-
-    # read tree as rooted and get descendant taxa
-    # rooted_tree = dendropy.Tree.get_from_path(input_tree, schema='newick', rooting="force-rooted", preserve_underscores=True)
-    # root_node = rooted_tree.seed_node
-    # arbitrary_child = root_node.child_nodes()[0]
-    # taxa_for_rooting = [leaf.taxon.label for leaf in arbitrary_child.leaf_iter()]
-    # print taxa_for_rooting
-
     # read tree and bootstrap replicates as unrooted, and
     # calculate bootstrap support
-    orig_tree = dendropy.Tree.get_from_path(input_tree, schema='newick', rooting="force-unrooted", preserve_underscores=True)
+    orig_tree = dendropy.Tree.get_from_path(input_tree, 
+                                            schema='newick', 
+                                            rooting="force-unrooted", 
+                                            preserve_underscores=True)
     orig_tree.bipartitions = True
     orig_tree.encode_bipartitions()
 
@@ -74,18 +70,15 @@ def bootstrap_support(input_tree, replicate_trees, output_tree):
 
     for node in orig_tree.internal_nodes():
         if node.label:
-            node.label = str(int(node.support)) + ':' + node.label
+            support, taxon, aux_info = parse_label(node.label)
+            node.label = create_label(node.support, taxon, aux_info)
         else:
             node.label = str(int(node.support))
 
-    # now root the tree again
-    # mrca = orig_tree.mrca(taxon_labels=taxa_for_rooting)
-    # orig_tree.reroot_at_edge(mrca.edge,
-    #                         length1=0.5 * mrca.edge_length,
-    #                         length2=0.5 * mrca.edge_length,
-    #                         update_bipartitions=True)
-    # assert orig_tree.is_rooted
-    orig_tree.write_to_path(output_tree, schema='newick', suppress_rooting=True, unquoted_underscores=True)
+    orig_tree.write_to_path(output_tree, 
+                            schema='newick', 
+                            suppress_rooting=True, 
+                            unquoted_underscores=True)
 
 
 def bootstrap_alignment(msa, output_file, frac=1.0):

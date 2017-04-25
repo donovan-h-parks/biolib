@@ -64,7 +64,18 @@ class Diamond(object):
         cmd = 'diamond makedb --quiet -p %d --in %s -d %s' % (self.cpus, prot_file, db_file)
         os.system(cmd)
 
-    def blastp(self, prot_file, db_file, evalue, per_identity, per_aln_len, max_target_seqs, output_file, output_fmt='standard', tmp_dir=None, chunk_size=None, block_size=None):
+    def blastp(self, prot_file, 
+                    db_file, 
+                    evalue, 
+                    per_identity, 
+                    per_aln_len, 
+                    max_target_seqs,
+                    sensitive,
+                    output_file, 
+                    output_fmt='standard', 
+                    tmp_dir=None, 
+                    chunk_size=None, 
+                    block_size=None):
         """Apply diamond blastp to a set of protein sequences.
 
         Parameters
@@ -81,6 +92,8 @@ class Diamond(object):
             Percent query coverage threshold for reporting hits [0, 100].
         max_target_seqs : int
             Maximum number of hits to report per sequence.
+        sensitive : boolean
+            Run DIAMOND in sensitive mode.
         output_file : str
             Desired name of output file.
         output_fmt : str
@@ -107,6 +120,9 @@ class Diamond(object):
              
         if block_size:
             args += ' -b %d' % block_size
+            
+        if sensitive:
+            args += ' --sensitive'
 
         cmd = "diamond blastp --quiet --seg no -p %d -q %s -d %s -e %g --id %f --query-cover %f -k %d -o %s -f %s %s" % (self.cpus,
                                                                                                                     prot_file,
