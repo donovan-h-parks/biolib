@@ -43,44 +43,57 @@ class Histogram(AbstractPlot):
     def __init__(self, options):
         AbstractPlot.__init__(self, options)
 
-    def plot(self, x, xlabel, ylabel, bins, color, yticks=None, xticks=None, xlim=None, invert_xaxis=False):
+    def plot(self, x, 
+                    xlabel, 
+                    ylabel, 
+                    bins, 
+                    color, 
+                    yticks=None, 
+                    xticks=None, 
+                    xlim=None, 
+                    invert_xaxis=False,
+                    stacked=False,
+                    show_legend=False):
         # set size of figure
         self.fig.clear()
         self.fig.set_size_inches(self.options.width, self.options.height)
         axis = self.fig.add_subplot(111)
 
         # plot histogram as percentages
-        #num_entries = sum([len(c) for c in x])
-        #weights = []
-        #for c in xrange(0, len(x)):
-        #    w = [100.0/num_entries for _ in xrange(0, len(x[c]))]
-        #    weights.append(w)
-        
+        num_entries = sum([len(c) for c in x])
         weights = []
         for c in xrange(0, len(x)):
-            num_entries = len(x[c])
             w = [100.0/num_entries for _ in xrange(0, len(x[c]))]
             weights.append(w)
+        
+        #weights = []
+        #for c in xrange(0, len(x)):
+        #    num_entries = len(x[c])
+        #    w = [100.0/num_entries for _ in xrange(0, len(x[c]))]
+        #    weights.append(w)
 
         pdf, bins, patches = axis.hist(x, bins=bins, 
-                                            #normed=True,
+                                            #normed=normed,
                                             weights=weights,
                                             color=color, 
                                             lw=0.5, 
                                             histtype='bar', 
-                                            #stacked=True,
-                                            label=['No plasmids', 'With plasmids'])
+                                            stacked=stacked)
         
         axis.set_xlabel(xlabel)
         axis.set_ylabel(ylabel)
         
-        lgnd = axis.legend(
-                           loc='upper left',
-                           ncol=1,
-                           fontsize=self.options.tick_font_size,
-                           handletextpad=0.5,
-                           markerscale=2,
-                           frameon=False)
+        #formatter = FuncFormatter(to_percent)
+        #axis.yaxis.set_major_formatter(formatter)
+        
+        if show_legend:
+            lgnd = axis.legend(
+                               loc='upper left',
+                               ncol=1,
+                               fontsize=self.options.tick_font_size,
+                               handletextpad=0.5,
+                               markerscale=2,
+                               frameon=False)
         
         # *** Prettify histogram plot
         if yticks:

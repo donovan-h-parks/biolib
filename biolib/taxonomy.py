@@ -593,6 +593,26 @@ class Taxonomy(object):
                     p[taxon] = taxa[0:i]
 
         return p
+        
+    def extant_taxa(self, taxonomy):
+        """Get extant taxa for all taxa.
+
+        Parameters
+        ----------
+        taxonomy : d[unique_id] -> [d__<taxon>; ...; s__<taxon>]
+            Taxonomy strings indexed by unique ids.
+
+        Returns
+        -------
+        dict : d[taxon] -> set of extant taxa
+            Extant taxa for named groups at the specified rank.
+        """
+        
+        extant_taxa = {}
+        for rank_label in Taxonomy.rank_labels:
+            extant_taxa.update(self.extant_taxa_for_rank(rank_label, taxonomy))
+            
+        return extant_taxa
 
     def extant_taxa_for_rank(self, rank_label, taxonomy):
         """Get extant taxa for all named groups at the specified rank.

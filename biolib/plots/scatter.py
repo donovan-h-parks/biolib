@@ -78,7 +78,7 @@ class Scatter(AbstractPlot):
         p_x = []
         p_y = []
         p_c = []
-        colors = [(178/255.0,223/255.0,138/255.0),
+        colors = [(237/255.0,102/255.0,93/255.0),
                 (166/255.0,206/255.0,227/255.0),
                 (127/255.0,127/255.0,127/255.0)]
                 
@@ -113,7 +113,7 @@ class Scatter(AbstractPlot):
         p_perc = p_count * 100.0 / (hq_count + mq_count + p_count)
         
         lgnd = axes_scatter.legend((hq, mq, p),
-                                   ('High quality (%d genomes; %.1f%%)' % (hq_count, hq_perc), 
+                                   ('Near complete (%d genomes; %.1f%%)' % (hq_count, hq_perc), 
                                    'Medium quality (%d genomes; %.1f%%)' % (mq_count, mq_perc),
                                    'Partial (%d genomes; %.1f%%)' % (p_count, p_perc)),
                                    scatterpoints=1,

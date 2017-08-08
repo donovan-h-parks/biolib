@@ -124,7 +124,7 @@ class Diamond(object):
         if sensitive:
             args += ' --sensitive'
 
-        cmd = "diamond blastp --quiet --seg no -p %d -q %s -d %s -e %g --id %f --query-cover %f -k %d -o %s -f %s %s" % (self.cpus,
+        cmd = "diamond blastp --quiet -p %d -q %s -d %s -e %g --id %f --query-cover %f -k %d -o %s -f %s %s" % (self.cpus,
                                                                                                                     prot_file,
                                                                                                                     db_file,
                                                                                                                     evalue,
@@ -159,14 +159,14 @@ class Diamond(object):
         if db_file.endswith('.dmnd'):
             db_file = db_file[0:db_file.rfind('.dmnd')]
 
-        cmd = 'diamond blastx --quiet --seg no -p %d -t %s -q %s -d %s -e %f --id %f -k %d -a %s' % (self.cpus,
-                                                                                                        tempfile.gettempdir(),
-                                                                                                        nt_file,
-                                                                                                        db_file,
-                                                                                                        evalue,
-                                                                                                        per_identity,
-                                                                                                        max_target_seqs,
-                                                                                                        diamond_daa_file)
+        cmd = 'diamond blastx --quiet -p %d -t %s -q %s -d %s -e %f --id %f -k %d -a %s' % (self.cpus,
+                                                                                                tempfile.gettempdir(),
+                                                                                                nt_file,
+                                                                                                db_file,
+                                                                                                evalue,
+                                                                                                per_identity,
+                                                                                                max_target_seqs,
+                                                                                                diamond_daa_file)
 
         os.system(cmd)
 

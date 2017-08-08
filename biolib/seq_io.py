@@ -167,10 +167,10 @@ def read_fasta(fasta_file, keep_annotation=False):
     """
 
     if not os.path.exists(fasta_file):
-        raise InputFileError("Failed to open file %s" % fasta_file)
+        raise InputFileError('Input file %s does not exist.' % fasta_file)
 
     if os.stat(fasta_file).st_size == 0:
-        return
+        return {}
 
     try:
         open_file = open
@@ -219,10 +219,10 @@ def read_fastq(fastq_file):
     """
 
     if not os.path.exists(fastq_file):
-        raise InputFileError
+        raise InputFileError('Input file %s does not exist.' % fastq_file)
 
     if os.stat(fastq_file).st_size == 0:
-        return
+        return {}
 
     try:
         open_file = open
@@ -315,10 +315,10 @@ def read_fasta_seq(fasta_file, keep_annotation=False):
     """
 
     if not os.path.exists(fasta_file):
-        raise InputFileError
+        raise InputFileError('Input file %s does not exist.' % fasta_file)
 
     if os.stat(fasta_file).st_size == 0:
-        return
+        pass
 
     try:
         open_file = open
@@ -389,10 +389,10 @@ def read_fastq_seq(fastq_file):
     """
 
     if not os.path.exists(fastq_file):
-        raise InputFileError
+        raise InputFileError('Input file %s does not exist.' % fastq_file)
 
     if os.stat(fastq_file).st_size == 0:
-        return
+        pass
 
     try:
         open_file = open
@@ -435,10 +435,10 @@ def extract_seqs(fasta_file, seqs_to_extract):
     """
 
     if not os.path.exists(fasta_file):
-        raise InputFileError
+        raise InputFileError('Input file %s does not exist.' % fasta_file)
 
     if os.stat(fasta_file).st_size == 0:
-        return
+        return {}
 
     seqs = {}
     for line in open(fasta_file):
@@ -473,10 +473,10 @@ def seq_lengths(fasta_file):
     """
 
     if not os.path.exists(fasta_file):
-        raise InputFileError
+        raise InputFileError('Input file %s does not exist.' % fasta_file)
 
     if os.stat(fasta_file).st_size == 0:
-        return
+        return {}
 
     lens = {}
     for seq_id, seq in read_fasta_seq(fasta_file):
