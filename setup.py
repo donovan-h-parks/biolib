@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup
 
 import os
 
@@ -18,6 +18,5 @@ setup(
     url='http://pypi.python.org/pypi/biolib/',
     license='GPL3',
     description='Package for common tasks in bioinformatic.',
-    long_description=open('README.md').read(),
-    install_requires=[],
+    install_requires=["future >= 0.16.0"],
 )

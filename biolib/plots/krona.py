@@ -65,7 +65,7 @@ class Krona():
         """
 
         # create temporary files for each item
-        cmd_args = ['ktImportText', '-o', output_file]
+        cmd = 'ktImportText -o %s' % output_file
         tmp_dir = tempfile.mkdtemp()
         for unique_id in alphanumeric_sort(profiles.keys()):
             tmp_file = os.path.join(tmp_dir, unique_id)
@@ -75,10 +75,10 @@ class Krona():
                 fout.write(str(num_hits) + '\t' + '\t'.join(elements) + '\n')
             fout.close()
 
-            cmd_args.append('%s,%s' % (tmp_file, unique_id))
+            cmd += ' %s,%s' % (tmp_file, unique_id)
 
         # create krona plot
-        execute.run(cmd_args)
+        execute.run(cmd)
 
         # clean up temporary files
         shutil.rmtree(tmp_dir)

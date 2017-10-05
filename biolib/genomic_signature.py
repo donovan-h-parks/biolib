@@ -95,7 +95,7 @@ class GenomicSignature(object):
 
         Returns
         -------
-        dict : d[kmer] -> count
+        list
             Count of each kmer in the set of sequences.
         """
 
@@ -109,13 +109,12 @@ class GenomicSignature(object):
                 except KeyError:
                     # unknown kmer due to an ambiguous character
                     pass
-
-        # pack signature into a dictionary
-        d = {}
-        for i, kmer in enumerate(self.kmer_cols):
-            d[kmer] = sig[i]
-
-        return d
+                    
+        total_kmers = sum(sig)
+        for i, c in enumerate(sig):
+            sig[i] = float(c)/total_kmers
+                    
+        return sig
 
     def canonical_order(self):
         """Canonical order of kmers."""
@@ -153,9 +152,9 @@ class GenomicSignature(object):
 
         Parameters
         ----------
-        sig1 : d[kmer] -> count
+        sig1 : list of kmer counts in canonical order
             First genomic signature.
-        sig2 : d[kmer] -> count
+        sig2 : list of kmer counts in canonical order
             Second genomic signature.
 
         Returns

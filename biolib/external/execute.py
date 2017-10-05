@@ -15,13 +15,9 @@
 #                                                                             #
 ###############################################################################
 
-__author__ = "Donovan Parks"
-__copyright__ = "Copyright 2015"
-__credits__ = ["Donovan Parks"]
-__license__ = "GPL3"
-__maintainer__ = "Donovan Parks"
-__email__ = "donovan.parks@gmail.com"
-__status__ = "Development"
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import os
 import sys
@@ -32,7 +28,7 @@ import subprocess
 """Helper functions for running external programs."""
 
 
-def run(args):
+def run(cmd):
     """Run executable program.
 
     This function will exit the program,
@@ -40,27 +36,31 @@ def run(args):
 
     Parameters
     ----------
-    args : list
-        Arguments of executable program.
+    command : str
+        Command to run.
 
     Returns
     -------
     boolean
-        True if executable, else False.
+        True if executed , else False.
+    exception
+        Program output if executed successfully, else Exception.
 
     Example:
         run(['ls', '-l'])
     """
 
     try:
-        subprocess.check_output(args)
-    except subprocess.CalledProcessError, e:
-        logging.error('Failed to execute:')
-        logging.error(e.cmd)
-        logging.error('')
-        logging.error('Program %s returned:' % args[0])
-        logging.error(e.output)
-        sys.exit()
+        output = subprocess.check_output(cmd.split(' '))
+        return True, output
+    except subprocess.CalledProcessError as e:
+        return False, e
+        
+        #logging.error('Failed to execute:')
+        #logging.error(e.cmd)
+        #logging.error('')
+        #logging.error('Program %s returned:' % args[0])
+        #logging.error(e.output)
 
 
 def is_executable(fpath):
@@ -136,8 +136,8 @@ def check_on_path(program, exit_on_fail=True):
         return True
 
     if exit_on_fail:
-        print '%s is not on the system path.' % program
-        sys.exit()
+        print('%s is not on the system path.' % program)
+        sys.exit(1)
 
     return False
 

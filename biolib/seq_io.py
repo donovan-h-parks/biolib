@@ -15,12 +15,11 @@
 #                                                                             #
 ###############################################################################
 
-__author__ = 'Donovan Parks'
-__copyright__ = 'Copyright 2014'
-__credits__ = ['Donovan Parks']
-__license__ = 'GPL3'
-__maintainer__ = 'Donovan Parks'
-__email__ = 'donovan.parks@gmail.com'
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
+from future.utils import viewitems
 
 import os
 import sys
@@ -75,7 +74,7 @@ def is_nucleotide(seq_file, req_perc=0.95, max_seqs_to_read=10):
         for c in (nucleotide_bases | {'n'} | insertion_bases):
             nt_bases += seq.count(c)
 
-        if float(nt_bases) / len(seq) >= req_perc:
+        if nt_bases / len(seq) >= req_perc:
             return True
 
         seq_count += 1
@@ -121,7 +120,7 @@ def is_protein(seq_file, req_perc=0.95, max_seqs_to_read=10):
         for c in (protein_bases | {'x'} | insertion_bases):
             prot_bases += seq.count(c)
 
-        if float(prot_bases) / len(seq) >= req_perc:
+        if prot_bases / len(seq) >= req_perc:
             return True
 
         seq_count += 1
@@ -193,13 +192,13 @@ def read_fasta(fasta_file, keep_annotation=False):
             else:
                 seqs[seq_id].append(line.strip())
 
-        for seq_id, seq in seqs.iteritems():
+        for seq_id, seq in seqs.items():
             seqs[seq_id] = ''.join(seq).replace(' ', '')
     except:
-        print traceback.format_exc()
-        print ''
-        print  "[Error] Failed to process sequence file: " + fasta_file
-        sys.exit()
+        print(traceback.format_exc())
+        print()
+        print("[Error] Failed to process sequence file: " + fasta_file)
+        sys.exit(1)
 
     return seqs
 
@@ -241,10 +240,10 @@ def read_fastq(fastq_file):
             elif line_num == 4:
                 line_num = 0
     except:
-        print traceback.format_exc()
-        print ''
-        print  "[Error] Failed to process sequence file: " + fastq_file
-        sys.exit()
+        print(traceback.format_exc())
+        print()
+        print("[Error] Failed to process sequence file: " + fastq_file)
+        sys.exit(1)
 
     return seqs
 
@@ -358,10 +357,10 @@ def read_fasta_seq(fasta_file, keep_annotation=False):
     except GeneratorExit:
         pass
     except:
-        print traceback.format_exc()
-        print ''
-        print  "[Error] Failed to process sequence file: " + fasta_file
-        sys.exit()
+        print(traceback.format_exc())
+        print()
+        print("[Error] Failed to process sequence file: " + fasta_file)
+        sys.exit(1)
 
 
 def read_fastq_seq(fastq_file):
@@ -412,10 +411,10 @@ def read_fastq_seq(fastq_file):
     except GeneratorExit:
         pass
     except:
-        print traceback.format_exc()
-        print ''
-        print  "[Error] Failed to process sequence file: " + fastq_file
-        sys.exit()
+        print(traceback.format_exc())
+        print()
+        print("[Error] Failed to process sequence file: " + fastq_file)
+        sys.exit(1)
 
 
 def extract_seqs(fasta_file, seqs_to_extract):
@@ -452,7 +451,7 @@ def extract_seqs(fasta_file, seqs_to_extract):
         elif seq_of_interest:
             seqs[seq_id].append(line.strip())
 
-    for seq_id, seq in seqs.iteritems():
+    for seq_id, seq in seqs.items():
         seqs[seq_id] = ''.join(seq).replace(' ', '')
 
     return seqs
@@ -507,7 +506,7 @@ def write_fasta(seqs, output_file):
     else:
         fout = open(output_file, 'w')
 
-    for seq_id, seq in seqs.iteritems():
+    for seq_id, seq in viewitems(seqs):
         fout.write('>' + seq_id + '\n')
         fout.write(seq + '\n')
     fout.close()
