@@ -82,10 +82,7 @@ class Scatter(AbstractPlot):
                 (166/255.0,206/255.0,227/255.0),
                 (127/255.0,127/255.0,127/255.0)]
                 
-        comp98 = 0
         for comp, cont in zip(x,y):
-            if comp >= 98:
-                comp98 += 1
             if comp >= 90 and cont <= 5:
                 hq_x.append(comp)
                 hq_y.append(cont)
@@ -98,9 +95,7 @@ class Scatter(AbstractPlot):
                 p_x.append(comp)
                 p_y.append(cont)
                 p_c.append(colors[2])
-                
-        print 'comp98', comp98 * 100.0 / len(x)
-        
+
         mq = axes_scatter.scatter(mq_x, mq_y, c=mq_c, s=30, lw=0.5)
         hq = axes_scatter.scatter(hq_x, hq_y, c=hq_c, s=30, lw=0.5)
         p = axes_scatter.scatter(p_x, p_y, c=p_c, s=30, lw=0.5)

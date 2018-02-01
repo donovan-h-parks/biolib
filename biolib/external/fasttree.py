@@ -72,7 +72,7 @@ class FastTree():
         """
 
         assert(seq_type.upper() in ['NT', 'PROT'])
-        assert(model_str.upper() in ['WAG', 'LG', 'JTT'])
+        assert(model_str.upper() in ['WAG', 'LG', 'JTT', 'GTR'])
 
         self.output_dir = output_dir
         self.seq_type = seq_type
@@ -134,7 +134,7 @@ class FastTree():
         """
 
         assert(seq_type.upper() in ['NT', 'PROT'])
-        assert(model_str.upper() in ['WAG', 'LG', 'JTT'])
+        assert(model_str.upper() in ['WAG', 'LG', 'JTT', 'GTR'])
 
         self.output_dir = output_dir
         self.seq_type = seq_type
@@ -184,7 +184,7 @@ class FastTree():
         """
 
         assert(seq_type.upper() in ['NT', 'PROT'])
-        assert(model_str.upper() in ['WAG', 'LG', 'JTT'])
+        assert(model_str.upper() in ['WAG', 'LG', 'JTT', 'GTR'])
 
         if seq_type == 'prot':
             seq_type_str = ''

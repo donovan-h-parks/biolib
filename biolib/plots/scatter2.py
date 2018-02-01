@@ -28,8 +28,11 @@ from matplotlib.ticker import NullFormatter
 from matplotlib import collections
 
 from numpy import (sum as np_sum,
+                    min as np_min,
+                    max as np_max,
                     polyfit as np_polyfit,
                     poly1d as np_poly1d)
+from scipy.stats import pearsonr
 
 
 class Scatter2(AbstractPlot):
@@ -83,10 +86,21 @@ class Scatter2(AbstractPlot):
             
         # linear regression line
         fit = np_polyfit(x,y,1)
-        print fit
-        fit_fn = np_poly1d(fit) 
-        axes_scatter.plot([0, 20], fit_fn([0, 20]), '--r')
-        axes_scatter.text(0.5, 99, "y=%.1fx + %.1f" % (fit[0], fit[1]), fontsize=9)
+        fit_fn = np_poly1d(fit)
+        r, p = pearsonr(x, y)
+        axes_scatter.plot(axes_scatter.get_xlim(), fit_fn(axes_scatter.get_xlim()), 'r--', alpha=0.5, zorder=5)
+        axes_scatter.text(min(axes_scatter.get_xlim())+0.01, 99.8, "y=%.1fx + %.1f" % (fit[0], fit[1]), fontsize=8)
+        axes_scatter.text(min(axes_scatter.get_xlim())+0.01, 99.6, "r=%.2f" % r, fontsize=8)
+        
+        # plot y=x
+        lims = [
+            np_min([axes_scatter.get_xlim(), axes_scatter.get_ylim()]),  # min of both axes
+            np_max([axes_scatter.get_xlim(), axes_scatter.get_ylim()]),  # max of both axes
+        ]
+
+        # now plot both limits against eachother
+        print 'y=x'
+        axes_scatter.plot(lims, lims, 'r-', alpha=0.5, zorder=5)
         
         # *** Prettify scatter plot
         for line in axes_scatter.yaxis.get_ticklines(): 

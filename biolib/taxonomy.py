@@ -24,6 +24,7 @@ __email__ = 'donovan.parks@gmail.com'
 
 import sys
 import logging
+import re
 from collections import defaultdict
 
 from biolib.common import is_float
@@ -145,7 +146,7 @@ class Taxonomy(object):
         
         if not taxa:
             return ';'.join(Taxonomy.rank_prefixes)
-            
+
         last_rank = Taxonomy.rank_prefixes.index(taxa[-1][0:3])
         
         for i in xrange(last_rank+1, len(Taxonomy.rank_prefixes)):
@@ -153,12 +154,14 @@ class Taxonomy(object):
             
         return taxa
 
-    def fill_missing_ranks(self, taxa):
+    def fill_missing_ranks(self, taxa, warning=True):
         """Fill in any missing ranks in a taxonomy string.
 
         This function assumes the taxonomic ranks are
         in the proper rank order, but that some ranks may
         be missing.
+        
+        e.g., [d__<taxon>, p__<taxon>, p__<taxon>, f__<taxon>, s__<taxon>]
 
         Parameters
         ----------
@@ -170,16 +173,29 @@ class Taxonomy(object):
         list
             List of taxa with all ranks.
         """
-
+        
         new_taxa = []
-        cur_taxa_index = 0
-        for rank_prefix in Taxonomy.rank_prefixes:
-            if len(taxa) > cur_taxa_index and taxa[cur_taxa_index][0:3] == rank_prefix:
-                new_taxa.append(taxa[cur_taxa_index])
-                cur_taxa_index += 1
-            else:
-                new_taxa.append(rank_prefix)
-
+        prev_rank_index = -1
+        for t in taxa:
+            rank_index = Taxonomy.rank_index[t[0:3]]
+            if rank_index == prev_rank_index + 1:
+                # rank is in proper order
+                new_taxa.append(t)
+            elif rank_index == prev_rank_index:
+                # rank is repeated which is fine
+                new_taxa.append(t)
+            elif rank_index - prev_rank_index > 1:
+                # fill in all missing ranks
+                for r in xrange(prev_rank_index+1, rank_index):
+                    new_taxa.append(Taxonomy.rank_prefixes[r])
+                new_taxa.append(t)
+            elif warning:
+                # current rank is more basal than previous rank
+                print('Taxa have none canonical rank ordering: %s' % taxa)
+                return taxa
+                
+            prev_rank_index = rank_index
+                
         return new_taxa
 
     def taxonomic_consistency(self, taxonomy, report_errors=True):
@@ -355,11 +371,11 @@ class Taxonomy(object):
             for i, taxon in enumerate(taxa):
                 if taxon != Taxonomy.rank_prefixes[i]:
                     taxon_lineages[taxon].add(';'.join(taxa[0:i+1]))
-                
+
         # identify taxon belonging to multiple lineages
         duplicates = {}
         for taxon, lineages in taxon_lineages.iteritems():
-            if len(lineages) > 2:
+            if len(lineages) >= 2:
                 duplicates[taxon] = lineages
         
         return duplicates
@@ -423,18 +439,25 @@ class Taxonomy(object):
                         break
                         
             if check_group_names:
-                species_index = Taxonomy.rank_index['s__']
-                for r, taxon in enumerate(taxa):
-                    if r != species_index and ':' in taxon:
+                for taxon in taxa:
+                    canonical_taxon = ' '.join([t.strip() for t in re.split('_[A-Z]+(?= |$)', taxon[3:])]).strip()
+                    if canonical_taxon and re.match('^[a-zA-Z0-9- ]+$', canonical_taxon) is None:
                         invalid_group_name[taxon_id] = [taxon, 'Taxon contains invalid characters']
 
             if check_species:
+                genus_index = Taxonomy.rank_index['g__']
                 species_index = Taxonomy.rank_index['s__']
                 if len(taxa) > species_index:
                     species_name = taxa[species_index]
                     valid, error_msg = self.validate_species_name(species_name, require_full=True, require_prefix=True)
                     if not valid:
                         invalid_species_name[taxon_id] = [species_name, error_msg]
+                        
+                    if species_name != 's__':
+                        genus_name = taxa[genus_index]
+                        generic_name = species_name.split()[0]
+                        if genus_name[3:] != generic_name[3:]:
+                            invalid_species_name[taxon_id] = [species_name, 'Genus and generic names do not match: %s' % genus_name]
                         
         # check for duplicate names
         invalid_duplicate_name = []
@@ -587,8 +610,8 @@ class Taxonomy(object):
 
         p = defaultdict(list)
         for taxon_id, taxa in taxonomy.iteritems():
+            p[taxon_id] = taxa
             for i, taxon in enumerate(taxa):
-                p[taxon_id] = taxa
                 if i != 0:
                     p[taxon] = taxa[0:i]
 
@@ -683,7 +706,7 @@ class Taxonomy(object):
             
         return lineages
         
-    def read_from_tree(self, tree):
+    def read_from_tree(self, tree, warnings=True):
         """Obtain the taxonomy for each extant taxa as specified by internal tree labels.
 
         Parameters
@@ -715,6 +738,9 @@ class Taxonomy(object):
                         taxa_str = taxa_str.split(':')[1]
 
                     if not is_float(taxa_str):
+                        if taxa_str[-1] == ';':
+                            taxa_str = taxa_str[:-1]
+                            
                         # check for concatenated ranks of the form: p__Crenarchaeota__c__Thermoprotei
                         for prefix in Taxonomy.rank_prefixes:
                             split_str = '__' + prefix
@@ -725,7 +751,7 @@ class Taxonomy(object):
                         taxa = [x.strip() for x in taxa_str.split(';')] + taxa
                 node = node.parent_node
 
-            if len(taxa) > 7:
+            if warnings and len(taxa) > 7:
                 self.logger.warning('Invalid taxonomy string read from tree for taxon %s: %s' % (leaf.taxon.label, taxa))
                 #sys.exit(-1)
 

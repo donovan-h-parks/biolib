@@ -31,9 +31,6 @@ import subprocess
 def run(cmd):
     """Run executable program.
 
-    This function will exit the program,
-    should the call to the executable fail.
-
     Parameters
     ----------
     command : str
@@ -45,9 +42,6 @@ def run(cmd):
         True if executed , else False.
     exception
         Program output if executed successfully, else Exception.
-
-    Example:
-        run(['ls', '-l'])
     """
 
     try:
