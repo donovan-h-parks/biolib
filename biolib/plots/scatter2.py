@@ -15,6 +15,8 @@
 #                                                                             #
 ###############################################################################
 
+from __future__ import print_function
+
 __author__ = 'Donovan Parks'
 __copyright__ = 'Copyright 2015'
 __credits__ = ['Donovan Parks']
@@ -99,7 +101,7 @@ class Scatter2(AbstractPlot):
         ]
 
         # now plot both limits against eachother
-        print 'y=x'
+        print('y=x')
         axes_scatter.plot(lims, lims, 'r-', alpha=0.5, zorder=5)
         
         # *** Prettify scatter plot
