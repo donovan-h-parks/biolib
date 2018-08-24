@@ -122,7 +122,7 @@ class Prodigal(object):
                 prodigalParser = ProdigalGeneFeatureParser(gff_file_tmp)
 
                 codingBases = 0
-                for seq_id, _seq in seqs.iteritems():
+                for seq_id, _seq in seqs.items():
                     codingBases += prodigalParser.coding_bases(seq_id)
 
                 codingDensity = float(codingBases) / total_bases
