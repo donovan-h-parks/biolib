@@ -147,7 +147,11 @@ class Taxonomy(object):
         if not taxa:
             return ';'.join(Taxonomy.rank_prefixes)
 
-        last_rank = Taxonomy.rank_prefixes.index(taxa[-1][0:3])
+        try:
+            last_rank = Taxonomy.rank_prefixes.index(taxa[-1][0:3])
+        except:
+            self.logger.error('Taxon is missing rank prefix: %s' % ';'.join(taxa))
+            sys.exit()
         
         for i in xrange(last_rank+1, len(Taxonomy.rank_prefixes)):
             taxa.append(Taxonomy.rank_prefixes[i])
