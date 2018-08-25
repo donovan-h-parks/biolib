@@ -19,7 +19,11 @@ import os
 import sys
 import logging
 import ntpath
-from StringIO import StringIO
+
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 from biolib.common import make_sure_path_exists
 

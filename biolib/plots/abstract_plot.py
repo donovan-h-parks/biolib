@@ -15,6 +15,8 @@
 #                                                                             #
 ###############################################################################
 
+from __future__ import print_function
+
 __author__ = 'Donovan Parks'
 __copyright__ = 'Copyright 2014'
 __credits__ = ['Donovan Parks']
@@ -97,7 +99,7 @@ class AbstractPlot(FigureCanvas):
         try:
             __import__('mpld3')
         except ImportError:
-            print '[Error] The mpld3 module is required to save HTML figures.'
+            print('[Error] The mpld3 module is required to save HTML figures.')
             sys.exit()
 
         import mpld3

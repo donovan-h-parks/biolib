@@ -15,6 +15,8 @@
 #                                                                             #
 ###############################################################################
 
+from __future__ import print_function
+
 __author__ = 'Donovan Parks'
 __copyright__ = 'Copyright 2014'
 __credits__ = ['Donovan Parks']
@@ -196,9 +198,9 @@ class Parallel(object):
             manager_proc.join()
 
             return consumer_data
-        except Exception, _err:
-            print sys.exc_info()[0]
-            print traceback.format_exc()
+        except Exception as _err:
+            print(sys.exc_info()[0])
+            print(traceback.format_exc())
             self.logger.warning('Exception encountered while processing data.')
             manager_proc.terminate()
 
@@ -279,8 +281,8 @@ class Parallel(object):
             manager_proc.join()
 
             return consumer_data
-        except Exception, _err:
-            print sys.exc_info()[0]
-            print traceback.format_exc()
+        except Exception as _err:
+            print(sys.exc_info()[0])
+            print(traceback.format_exc())
             self.logger.warning('Exception encountered while processing data.')
             manager_proc.terminate()

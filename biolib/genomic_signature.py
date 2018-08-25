@@ -21,7 +21,6 @@
 #                                                                             #
 ###############################################################################
 
-from string import maketrans
 import logging
 
 import numpy as np
@@ -41,7 +40,7 @@ class GenomicSignature(object):
         self.logger = logging.getLogger()
 
         self.k = k
-        self.compl = maketrans('ACGT', 'TGCA')
+        self.compl = "".maketrans('ACGT', 'TGCA')
         self.kmer_cols, self.kmer_index = self._identify_kmers()
 
     def _identify_kmers(self):

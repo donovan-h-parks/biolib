@@ -29,7 +29,7 @@ from collections import Counter
 
 """Sequence manipulation and statistics."""
 
-_complements = string.maketrans('acgtrymkbdhvACGTRYMKBDHV', 'tgcayrkmvhdbTGCAYRKMVHDB')
+_complements = "".maketrans('acgtrymkbdhvACGTRYMKBDHV', 'tgcayrkmvhdbTGCAYRKMVHDB')
 
 
 def count_nt(seq):

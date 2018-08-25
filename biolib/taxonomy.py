@@ -489,46 +489,46 @@ class Taxonomy(object):
 
         if report_errors:
             if len(invalid_ranks):
-                print ''
-                print 'Taxonomy contains too few ranks:'
+                print('')
+                print('Taxonomy contains too few ranks:')
                 for taxon_id, taxa_str in invalid_ranks.iteritems():
-                    print '%s\t%s' % (taxon_id, taxa_str)
+                    print('%s\t%s' % (taxon_id, taxa_str))
 
             if len(invalid_prefixes):
-                print ''
-                print 'Taxonomy contains an invalid rank prefix:'
+                print('')
+                print('Taxonomy contains an invalid rank prefix:')
                 for taxon_id, info in invalid_prefixes.iteritems():
-                    print '%s\t%s\t%s' % (taxon_id, info[0], info[1])
+                    print('%s\t%s\t%s' % (taxon_id, info[0], info[1]))
                     
             if len(invalid_group_name):
-                print ''
-                print 'Taxa containing invalid characters:'
+                print('')
+                print('Taxa containing invalid characters:')
                 for taxon_id, err_msg in invalid_group_name.iteritems():
-                    print '%s\t%s\t%s' % (taxon_id, err_msg[0], err_msg[1])
+                    print('%s\t%s\t%s' % (taxon_id, err_msg[0], err_msg[1]))
 
             if len(invalid_species_name):
-                print ''
-                print 'Taxonomy contains invalid species names:'
+                print('')
+                print('Taxonomy contains invalid species names:')
                 for taxon_id, info in invalid_species_name.iteritems():
-                    print '%s\t%s\t%s' % (taxon_id, info[0], info[1])
+                    print('%s\t%s\t%s' % (taxon_id, info[0], info[1]))
                     
             if len(invalid_duplicate_name):
-                print ''
-                print 'Taxonomy contains identical taxon names in multiple lineages:'
+                print('')
+                print('Taxonomy contains identical taxon names in multiple lineages:')
                 for duplicate_name in invalid_duplicate_name.keys():
-                    print '%s' % duplicate_name
+                    print('%s' % duplicate_name)
                     
             if len(missing_parent):
-                print ''
-                print 'Taxonomy contains taxa with an undefined parent:'
+                print('')
+                print('Taxonomy contains taxa with an undefined parent:')
                 for taxon in missing_parent:
-                    print '%s' % taxon
+                    print('%s' % taxon)
 
             if len(invalid_hierarchies):
-                print ''
-                print 'Taxonomy contains taxa with multiple parents:'
+                print('')
+                print('Taxonomy contains taxa with multiple parents:')
                 for child_taxon, parent_taxa in invalid_hierarchies.iteritems():
-                    print '%s\t%s' % (child_taxon, ', '.join(parent_taxa))
+                    print('%s\t%s' % (child_taxon, ', '.join(parent_taxa)))
 
         return invalid_ranks, invalid_prefixes, invalid_species_name, invalid_hierarchies, invalid_group_name
 
