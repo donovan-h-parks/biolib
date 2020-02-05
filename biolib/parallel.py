@@ -15,7 +15,6 @@
 #                                                                             #
 ###############################################################################
 
-from __future__ import print_function
 
 __author__ = 'Donovan Parks'
 __copyright__ = 'Copyright 2014'

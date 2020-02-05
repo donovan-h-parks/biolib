@@ -50,7 +50,7 @@ class FastTree():
         else:
             check_on_path('FastTree')
 
-    def bootstrap(self, input_tree, msa_file, seq_type, model_str, num_replicates, output_dir, cpus):
+    def bootstrap(self, input_tree, msa_file, seq_type, model_str, gamma, num_replicates, output_dir, cpus):
         """Perform non-parametric bootstrapping.
 
         Parameters
@@ -63,6 +63,8 @@ class FastTree():
             Specifies multiple sequences alignment is of 'nt' or 'prot'.
         model_str : str
             Specified either the 'wag' or 'jtt' model.
+        gamma : bool
+            Indicates if GAMMA model should be used
         num_replicates : int
             Number of replicates to perform.
         output_dir: str
@@ -77,6 +79,7 @@ class FastTree():
         self.output_dir = output_dir
         self.seq_type = seq_type
         self.model = model_str
+        self.gamma = gamma
         self.msa = seq_io.read(msa_file)
 
         # calculate replicates
@@ -114,11 +117,11 @@ class FastTree():
 
         output_tree = os.path.join(rep_dir, 'bootstrap.tree')
         log_file = os.path.join(rep_dir, 'fasttree.log')
-        self.run(output_msa, self.seq_type, self.model, output_tree, log_file)
+        self.run(output_msa, self.seq_type, self.model, self.gamma, output_tree, log_file)
 
         return True
 
-    def parallel_run(self, msa_files, seq_type, model_str, output_dir, cpus):
+    def parallel_run(self, msa_files, seq_type, model_str, gamma, output_dir, cpus):
         """Infer tree using FastTree in parallel.
 
         Parameters
@@ -139,6 +142,7 @@ class FastTree():
         self.output_dir = output_dir
         self.seq_type = seq_type
         self.model = model_str
+        self.gamma = gamma
 
         parallel = Parallel(cpus)
         parallel.run(self._parallel_infer_tree, None, msa_files, None)
@@ -158,14 +162,12 @@ class FastTree():
 
         output_tree = os.path.join(self.output_dir, file_prefix + '.tree')
         fast_tree_output = os.path.join(self.output_dir, file_prefix + '.log')
-        self.run(msa_file, self.seq_type, self.model, output_tree, fast_tree_output)
+        self.run(msa_file, self.seq_type, self.model, self.gamma, output_tree, fast_tree_output)
 
-    def run(self, msa_file, seq_type, model_str, output_tree, output_tree_log, log_file=None):
+    def run(self, msa_file, seq_type, model_str, gamma, output_tree, output_tree_log, log_file=None):
         """Infer tree using FastTree.
 
-        All trees are inferred using the GAMMA distribution to model
-        rate heterogeneity. Nucleotide trees are inferred under the
-        GTR model.
+        Nucleotide trees are inferred under the GTR model.
 
         Parameters
         ----------
@@ -175,6 +177,8 @@ class FastTree():
             Specifies multiple sequences alignment is of 'nt' or 'prot'.
         model_str : str
             Specified either the 'wag', 'lg', or 'jtt' model.
+        gamma : boolean
+            Indicates if GAMMA model should be used
         output_tree: str
             Output file containing inferred tree.
         output_tree_log: str
@@ -200,8 +204,13 @@ class FastTree():
 
         if not log_file:
             log_file = '/dev/null'
+            
+        gamma_str = ''
+        if gamma:
+            gamma_str = '-gamma'
 
-        cmd = '-quiet -nosupport -gamma %s %s -log %s %s > %s 2> %s' % (seq_type_str,
+        cmd = '-quiet -nosupport %s %s %s -log %s %s > %s 2> %s' % (gamma_str,
+                                                                        seq_type_str,
                                                                         model_str,
                                                                         output_tree_log,
                                                                         msa_file,

@@ -16,7 +16,7 @@
 ###############################################################################
 
 __author__ = 'Donovan Parks'
-__copyright__ = 'Copyright 2014'
+__copyright__ = 'Copyright 2018'
 __credits__ = ['Donovan Parks']
 __license__ = 'GPL3'
 __maintainer__ = 'Donovan Parks'
@@ -89,7 +89,14 @@ class Prodigal(object):
 
             # call genes under different translation tables
             if self.translation_table:
-                translation_tables = [self.translation_table]
+                canonical_gid = genome_id[0:genome_id.find('_', 4)]
+                if type(self.translation_table) is dict:
+                    if self.translation_table[canonical_gid]:
+                        translation_tables = [self.translation_table[canonical_gid]]
+                    else:
+                        translation_tables = [4, 11]
+                else:
+                    translation_tables = [self.translation_table]
             else:
                 translation_tables = [4, 11]
 
@@ -129,12 +136,15 @@ class Prodigal(object):
                 table_coding_density[translation_table] = codingDensity
 
             # determine best translation table
-            if not self.translation_table:
+            if len(translation_tables) > 1:
                 best_translation_table = 11
                 if (table_coding_density[4] - table_coding_density[11] > 0.05) and table_coding_density[4] > 0.7:
                     best_translation_table = 4
             else:
-                best_translation_table = self.translation_table
+                if type(self.translation_table) is dict:
+                    best_translation_table = self.translation_table[canonical_gid]
+                else:
+                    best_translation_table = self.translation_table
 
             shutil.copyfile(os.path.join(tmp_dir, str(best_translation_table), genome_id + '_genes.faa'), aa_gene_file)
             shutil.copyfile(os.path.join(tmp_dir, str(best_translation_table), genome_id + '_genes.fna'), nt_gene_file)

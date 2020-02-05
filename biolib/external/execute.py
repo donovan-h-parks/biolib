@@ -15,9 +15,6 @@
 #                                                                             #
 ###############################################################################
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 import os
 import sys
@@ -44,17 +41,12 @@ def run(cmd):
         Program output if executed successfully, else Exception.
     """
 
-    try:
-        output = subprocess.check_output(cmd.split(' '))
-        return True, output
-    except subprocess.CalledProcessError as e:
-        return False, e
-        
-        #logging.error('Failed to execute:')
-        #logging.error(e.cmd)
-        #logging.error('')
-        #logging.error('Program %s returned:' % args[0])
-        #logging.error(e.output)
+    rtn = subprocess.call(cmd, shell = True)
+    
+    if rtn != 0:
+        print('Failed to execute:')
+        print(cmd)
+        sys.exit(rtn)
 
 
 def is_executable(fpath):

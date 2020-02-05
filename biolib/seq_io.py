@@ -15,11 +15,6 @@
 #                                                                             #
 ###############################################################################
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
-from future.utils import viewitems
 
 import os
 import sys
@@ -506,7 +501,7 @@ def write_fasta(seqs, output_file):
     else:
         fout = open(output_file, 'w')
 
-    for seq_id, seq in viewitems(seqs):
+    for seq_id, seq in seqs.items():
         fout.write('>' + seq_id + '\n')
         fout.write(seq + '\n')
     fout.close()

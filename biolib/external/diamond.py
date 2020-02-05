@@ -50,8 +50,8 @@ class Diamond(object):
                             'standard': '6',
                             'custom': '6 qseqid qlen sseqid stitle slen length pident evalue bitscore'}
 
-    def make_database(self, prot_file, db_file):
-        """Make diamond database.
+    def create_db_cmd(self, prot_file, db_file):
+        """Get make DIAMOND database command.
 
         Parameters
         ----------
@@ -62,9 +62,21 @@ class Diamond(object):
         """
 
         cmd = 'diamond makedb --quiet -p %d --in %s -d %s' % (self.cpus, prot_file, db_file)
-        os.system(cmd)
+        return cmd
+    
+    def create_db(self, prot_file, db_file):
+        """Make diamond database.
 
-    def blastp(self, prot_file, 
+        Parameters
+        ----------
+        prot_file : str
+            Fasta file with protein sequences.
+        db_file : str
+            Desired name of Diamond database.
+        """
+        os.system(self.create_blastp_db_cmd(prot_file, db_file))
+        
+    def blastp_cmd(self, prot_file, 
                     db_file, 
                     evalue, 
                     per_identity, 
@@ -76,7 +88,7 @@ class Diamond(object):
                     tmp_dir=None, 
                     chunk_size=None, 
                     block_size=None):
-        """Apply diamond blastp to a set of protein sequences.
+        """Get DIAMOND blastp command.
 
         Parameters
         ----------
@@ -135,7 +147,34 @@ class Diamond(object):
                                                                                                                     self.output_fmt[output_fmt],
                                                                                                                     args)
 
-        os.system(cmd)
+        return cmd
+
+    def blastp(self, prot_file, 
+                    db_file, 
+                    evalue, 
+                    per_identity, 
+                    per_aln_len, 
+                    max_target_seqs,
+                    sensitive,
+                    output_file, 
+                    output_fmt='standard', 
+                    tmp_dir=None, 
+                    chunk_size=None, 
+                    block_size=None):
+        """Run DIAMOND blastp command."""
+
+        os.system(self.blastp_cmd(prot_file, 
+                                    db_file, 
+                                    evalue, 
+                                    per_identity, 
+                                    per_aln_len, 
+                                    max_target_seqs,
+                                    sensitive,
+                                    output_file, 
+                                    output_fmt, 
+                                    tmp_dir, 
+                                    chunk_size, 
+                                    block_size))
 
     def blastx(self, nt_file, db_file, evalue, per_identity, max_target_seqs, diamond_daa_file):
         """Apply diamond blastx to a set of nucleotide sequences.
