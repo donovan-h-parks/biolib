@@ -27,7 +27,7 @@ import logging
 import re
 from collections import defaultdict
 
-from biolib.common import is_float
+from biolib.common import is_float, check_file_exists
 
 import dendropy
 
@@ -117,8 +117,12 @@ class Taxonomy(object):
         """
 
         taxa = [x.strip() for x in tax_str.split(';')]
-        if len(taxa) != len(Taxonomy.rank_prefixes):
+        if len(taxa) < len(Taxonomy.rank_prefixes):
             self.logger.error('[Error] Taxonomy string contains too few ranks:')
+            self.logger.error('[Error] %s' % str(taxa))
+            return False
+        elif len(taxa) > len(Taxonomy.rank_prefixes):
+            self.logger.error('[Error] Taxonomy string contains too many ranks:')
             self.logger.error('[Error] %s' % str(taxa))
             return False
 
@@ -199,6 +203,8 @@ class Taxonomy(object):
                 return taxa
                 
             prev_rank_index = rank_index
+            
+        new_taxa = self.fill_trailing_ranks(new_taxa)
                 
         return new_taxa
 
@@ -228,7 +234,7 @@ class Taxonomy(object):
                 continue
 
             for r in xrange(1, len(taxa)):
-                if taxa[r] == Taxonomy.rank_prefixes[r]:
+                if len(taxa[r]) == 3:
                     break
 
                 if taxa[r] in expected_parent:
@@ -355,7 +361,7 @@ class Taxonomy(object):
 
         return True, None
         
-    def duplicate_names(self, taxonomy):
+    def duplicate_names(self, taxonomy, check_species=True):
         """Identify duplicate names in taxonomy.
         
         Parameters
@@ -373,18 +379,19 @@ class Taxonomy(object):
         taxon_lineages = defaultdict(set)
         for taxa in taxonomy.values():
             for i, taxon in enumerate(taxa):
-                if taxon != Taxonomy.rank_prefixes[i]:
+                if len(taxon) > 3:
                     taxon_lineages[taxon].add(';'.join(taxa[0:i+1]))
 
         # identify taxon belonging to multiple lineages
         duplicates = {}
         for taxon, lineages in taxon_lineages.iteritems():
             if len(lineages) >= 2:
-                duplicates[taxon] = lineages
+                if not taxon.startswith('s__') or check_species:
+                    duplicates[taxon] = lineages
         
         return duplicates
 
-    def validate(self, taxonomy, 
+    def validate(self, taxonomy,
                         check_prefixes, 
                         check_ranks, 
                         check_hierarchy, 
@@ -446,7 +453,8 @@ class Taxonomy(object):
                 for taxon in taxa:
                     canonical_taxon = ' '.join([t.strip() for t in re.split('_[A-Z]+(?= |$)', taxon[3:])]).strip()
                     if canonical_taxon and re.match('^[a-zA-Z0-9- ]+$', canonical_taxon) is None:
-                        invalid_group_name[taxon_id] = [taxon, 'Taxon contains invalid characters']
+                        if not taxon.startswith('s__') or check_species:
+                            invalid_group_name[taxon_id] = [taxon, 'Taxon contains invalid characters']
 
             if check_species:
                 genus_index = Taxonomy.rank_index['g__']
@@ -466,7 +474,7 @@ class Taxonomy(object):
         # check for duplicate names
         invalid_duplicate_name = []
         if check_duplicate_names:
-            invalid_duplicate_name = self.duplicate_names(taxonomy)
+            invalid_duplicate_name = self.duplicate_names(taxonomy, check_species)
             
         # check for inconsistencies in the taxonomic hierarchy
         invalid_hierarchies = defaultdict(set)
@@ -475,7 +483,7 @@ class Taxonomy(object):
             expected_parent = self.taxonomic_consistency(taxonomy, False)
             for taxon_id, taxa in taxonomy.iteritems():
                 for r in xrange(1, len(taxa)):
-                    if taxa[r] == Taxonomy.rank_prefixes[r]:
+                    if len(taxa[r]) == 3:
                         continue
 
                     if r == self.rank_index['s__'] and not check_species:
@@ -790,6 +798,8 @@ class Taxonomy(object):
         dict : d[unique_id] -> [d__<taxon>, ..., s__<taxon>]
             Taxa indexed by unique ids.
         """
+        
+        check_file_exists(taxonomy_file)
 
         try:
             d = {}

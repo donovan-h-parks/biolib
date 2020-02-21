@@ -92,8 +92,8 @@ class Blast():
                                                                 evalue
                                                                 bitscore""")
 
-    def blastp(self, query_seqs, prot_db, output_file, evalue=1e-3, max_matches=500, output_fmt='standard', task='blastp'):
-        """Apply blastp to query file.
+    def blastp_cmd(self, query_seqs, prot_db, output_file, evalue=1e-3, max_matches=500, output_fmt='standard', task='blastp'):
+        """Get BLASTp command.
 
         Finds homologs to query sequences using blastp homology search
         against a protein database. Hit can be reported using  either
@@ -125,7 +125,19 @@ class Blast():
         cmd += " -max_target_seqs %d" % max_matches
         cmd += " -task %s" % task
         cmd += " -outfmt '%s'" % self.output_fmt[output_fmt]
-        os.system(cmd)
+       
+        return cmd
+        
+    def blastp(self, query_seqs, prot_db, output_file, evalue=1e-3, max_matches=500, output_fmt='standard', task='blastp'):
+        """Run BLASTp command."""
+
+        os.system(self.blastp_cmd(query_seqs, 
+                                    prot_db, 
+                                    output_file, 
+                                    evalue, 
+                                    max_matches, 
+                                    output_fmt, 
+                                    task))
 
     def blastn(self, query_seqs, nucl_db, output_file, evalue=1e-3, max_matches=500, output_fmt='standard', task='megablast'):
         """Apply blastn to query file.
@@ -162,21 +174,35 @@ class Blast():
         cmd += " -outfmt '%s'" % self.output_fmt[output_fmt]
         os.system(cmd)
 
-    def create_blastn_db(self, fasta_file):
-        """Create nucleotide database."""
+    def create_blastn_db_cmd(self, prot_file, db_file):
+        """Get command to create nucleotide database."""
 
         if self.silent:
-            os.system('makeblastdb -dbtype nucl -in %s > /dev/null' % fasta_file)
+            cmd = 'makeblastdb -dbtype nucl -in %s -out %s > /dev/null' % (prot_file, db_file)
         else:
-            os.system('makeblastdb -dbtype nucl -in %s' % fasta_file)
-        
-    def create_blastp_db(self, fasta_file):
+            cmd = 'makeblastdb -dbtype nucl -in %s -out %s' % (prot_file, db_file)
+            
+        return cmd
+            
+    def create_blastn_db(self, prot_file, db_file):
         """Create protein database."""
 
+        os.system(self.create_blastn_db_cmd(prot_file, db_file))
+            
+    def create_blastp_db_cmd(self, prot_file, db_file):
+        """Get command to create protein database."""
+
         if self.silent:
-            os.system('makeblastdb -dbtype prot -in %s > /dev/null' % fasta_file)
+            cmd = 'makeblastdb -dbtype prot -in %s -out %s > /dev/null' % (prot_file, db_file)
         else:
-            os.system('makeblastdb -dbtype prot -in %s' % fasta_file)
+            cmd = 'makeblastdb -dbtype prot -in %s -out %s' % (prot_file, db_file)
+            
+        return cmd
+        
+    def create_blastp_db(self, prot_file, db_file):
+        """Create protein database."""
+
+        os.system(self.create_blastp_db_cmnd(prot_file, db_file))
 
     def read_hit(self, table, table_fmt):
         """Generator function to read hits from a blast output table.

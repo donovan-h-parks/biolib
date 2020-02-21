@@ -29,7 +29,11 @@ from collections import Counter
 
 """Sequence manipulation and statistics."""
 
-_complements = "".maketrans('acgtrymkbdhvACGTRYMKBDHV', 'tgcayrkmvhdbTGCAYRKMVHDB')
+#_complements = "".maketrans('acgtrymkbdhvACGTRYMKBDHV', 'tgcayrkmvhdbTGCAYRKMVHDB')
+
+#def rev_comp(seq):
+#    """Reverse complement a sequence."""
+#    return seq.translate(_complements)[::-1]
 
 
 def count_nt(seq):
@@ -80,6 +84,24 @@ def gc(seq):
 
     a, c, g, t = count_nt(seq)
     return float(g + c) / (a + c + g + t)
+    
+
+def unambiguous_nucleotides(seq):
+    """Count unambiguous nucleotides in a sequence.
+
+    Parameters
+    ----------
+    seq : str
+        Nucleotide sequence.
+
+    Returns
+    -------
+    int
+        Number of unambiguous bases.
+    """
+
+    a, c, g, t = count_nt(seq)
+    return a + c + g + t
 
 
 def ambiguous_nucleotides(seq):
@@ -102,12 +124,7 @@ def ambiguous_nucleotides(seq):
     a, c, g, t = count_nt(seq)
     return len(seq) - (a + c + g + t)
 
-
-def rev_comp(seq):
-    """Reverse complement a sequence."""
-    return seq.translate(_complements)[::-1]
-
-
+    
 def N50(seqs):
     """Calculate N50 for a set of sequences.
 
@@ -219,11 +236,11 @@ def identify_contigs(seqs, contig_break='NNNNNNNNNN'):
     """
 
     contigs = {}
-    for seq_id, seq in seqs.iteritems():
+    for seq_id, seq in seqs.items():
         seq = seq.upper()
         contig_count = 0
         for contig in seq.split(contig_break):
-            contig = contig.replace('N', '')
+            contig = contig.strip('N')
             if contig:
                 contigs[seq_id + '_c' + str(contig_count)] = contig
                 contig_count += 1

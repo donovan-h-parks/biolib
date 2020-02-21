@@ -24,7 +24,7 @@ class TimeKeeper:
 
     def __init__(self):
         """Initialization."""
-        self.logger = logging.getLogger()
+        self.logger = logging.getLogger('timestamp')
         self.start_time = time.time()
         self.last_log_time = self.start_time
 

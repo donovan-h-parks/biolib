@@ -37,7 +37,7 @@ class GenomicSignature(object):
     def __init__(self, k):
         """Initialize."""
 
-        self.logger = logging.getLogger()
+        self.logger = logging.getLogger('timestamp')
 
         self.k = k
         self.compl = "".maketrans('ACGT', 'TGCA')

@@ -38,7 +38,7 @@ class Krona():
     def __init__(self):
         """Initialization."""
 
-        self.logger = logging.getLogger()
+        self.logger = logging.getLogger('timestamp')
 
         execute.check_on_path('ktImportText')
 
