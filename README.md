@@ -6,10 +6,14 @@
 
 Biolib is a python package for common tasks in bioinformatic.
 
+## Announcements
+
+* Ported to Python 3 starting with version 0.1.0
+
 ## Install
 
 The simplest way to install this package is through pip:
-> sudo pip install biolib
+> pip install biolib
 
 ## Cite
 
