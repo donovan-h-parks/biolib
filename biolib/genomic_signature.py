@@ -84,8 +84,30 @@ class GenomicSignature(object):
         """Return the reverse complement of a sequence."""
         return seq.translate(self.compl)[::-1]
 
-    def calculate(self, seqs):
+    def rel_freq(self, seqs):
         """Calculate genomic signature of sequences.
+
+        Parameters
+        ----------
+        seqs : d[seq_id] -> seq
+            Sequences indexed by sequence id.
+
+        Returns
+        -------
+        list
+            Relative frequency of each kmer in the set of sequences.
+        """
+
+        sig = self.counts(seqs)
+
+        total_kmers = sum(sig)
+        for i, c in enumerate(sig):
+            sig[i] = float(c)/total_kmers
+                    
+        return sig
+        
+    def counts(self, seqs):
+        """Calculate count of each kmer.
 
         Parameters
         ----------
@@ -101,22 +123,19 @@ class GenomicSignature(object):
         sig = [0] * len(self.kmer_cols)
         for seq in seqs.values():
             tmp_seq = seq.upper()
-            for i in xrange(0, len(tmp_seq) - self.k + 1):
+            for i in range(0, len(tmp_seq) - self.k + 1):
                 try:
                     kmer_index = self.kmer_index[tmp_seq[i:i + self.k]]
                     sig[kmer_index] += 1
                 except KeyError:
                     # unknown kmer due to an ambiguous character
                     pass
-                    
-        total_kmers = sum(sig)
-        for i, c in enumerate(sig):
-            sig[i] = float(c)/total_kmers
-                    
+
         return sig
 
     def canonical_order(self):
         """Canonical order of kmers."""
+        
         return self.kmer_cols
 
     def seq_signature(self, seq):
@@ -136,7 +155,7 @@ class GenomicSignature(object):
         tmp_seq = seq.upper()
 
         sig = [0] * len(self.kmer_cols)
-        for i in xrange(0, len(tmp_seq) - self.k + 1):
+        for i in range(0, len(tmp_seq) - self.k + 1):
             try:
                 kmer_index = self.kmer_index[tmp_seq[i:i + self.k]]
                 sig[kmer_index] += 1
