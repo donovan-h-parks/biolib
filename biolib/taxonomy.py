@@ -481,6 +481,7 @@ class Taxonomy(object):
         missing_parent = set()
         if check_hierarchy:
             expected_parent = self.taxonomic_consistency(taxonomy, False)
+
             for taxon_id, taxa in taxonomy.items():
                 for r in range(1, len(taxa)):
                     if len(taxa[r]) == 3:
