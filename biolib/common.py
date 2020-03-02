@@ -114,6 +114,7 @@ def find_nearest(array, value):
         Closest element in 'array' to 'value'.
 
     """
+    
     idx = (np_abs(np_array(array) - value)).argmin()
     return array[idx]
 

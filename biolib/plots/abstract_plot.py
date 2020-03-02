@@ -15,7 +15,6 @@
 #                                                                             #
 ###############################################################################
 
-from __future__ import print_function
 
 __author__ = 'Donovan Parks'
 __copyright__ = 'Copyright 2014'
@@ -25,6 +24,8 @@ __maintainer__ = 'Donovan Parks'
 __email__ = 'donovan.parks@gmail.com'
 
 import sys
+import logging
+from pathlib import PurePath
 from collections import namedtuple
 
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
@@ -63,6 +64,8 @@ class AbstractPlot(FigureCanvas):
         self.name = '<none>'
 
         self.axes_colour = (0.5, 0.5, 0.5)
+        
+        self.logger = logging.getLogger('timestamp')
 
     def set_font_size(self, label_size, tick_size):
         """Set font size for all text elements."""
@@ -77,11 +80,20 @@ class AbstractPlot(FigureCanvas):
     def save_plot(self, filename, dpi=300):
         """Save plot to file."""
 
-        imgFormat = filename[filename.rfind('.') + 1:len(filename)]
-        if imgFormat in ['png', 'pdf', 'ps', 'eps', 'svg']:
-            self.fig.savefig(filename, format=imgFormat, dpi=dpi, facecolor='white', edgecolor='white', bbox_inches='tight')
+        if isinstance(filename, str):
+            filename = PurePath(filename)
+            
+        img_format = filename.suffix
+        if img_format in ['.png', '.pdf', '.ps', '.eps', '.svg']:
+            self.fig.savefig(filename.as_posix(), 
+                            format=img_format[1:], 
+                            dpi=dpi, 
+                            facecolor='white', 
+                            edgecolor='white', 
+                            bbox_inches='tight')
         else:
-            pass
+            self.logger.error(f'Unrecognized image format: {img_format}')
+            sys.exit(-1)
 
     def save_html(self, output_html, html_script=None, html_body=None):
         """Save figure as HTML.
@@ -141,7 +153,7 @@ class AbstractPlot(FigureCanvas):
         for line in axis.xaxis.get_ticklines():
             line.set_color(self.axes_colour)
 
-        for loc, spine in axis.spines.iteritems():
+        for loc, spine in axis.spines.items():
             if loc in ['right', 'top']:
                 spine.set_color('none')
             else:

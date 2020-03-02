@@ -1,14 +1,2 @@
-0.0.52
-- fix to calling command to create DIAMOND database
-
-0.0.51
--- fix to identifying contigs in scaffolds
--- updated interfaces to external programs
-
-0.0.50
--- modified validation routines for taxonomy to ignore species when desired
-
-0.0.49
--- modified fasttree interface to make the GAMMA model an explicit parameter
-
-0.0.48
+0.1.0
+- migration to Python 3

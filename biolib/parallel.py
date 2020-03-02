@@ -15,7 +15,6 @@
 #                                                                             #
 ###############################################################################
 
-from __future__ import print_function
 
 __author__ = 'Donovan Parks'
 __copyright__ = 'Copyright 2014'
@@ -231,9 +230,9 @@ class Parallel(object):
         seq_iter = seq_io.read_seq(seq_file)
         producer_queue = mp.Queue()
         read_all_seqs = False
-        for _ in xrange(self.cpus):
+        for _ in range(self.cpus):
             try:
-                seq_data = seq_iter.next()
+                seq_data = next(seq_iter)
                 producer_queue.put(seq_data)
             except StopIteration:
                 read_all_seqs = True
@@ -263,7 +262,7 @@ class Parallel(object):
 
                 if not read_all_seqs:
                     try:
-                        seq_data = seq_iter.next()
+                        seq_data = next(seq_iter)
                         producer_queue.put(seq_data)
                     except StopIteration:
                         read_all_seqs = True
