@@ -157,7 +157,7 @@ class Taxonomy(object):
             self.logger.error('Taxon is missing rank prefix: %s' % ';'.join(taxa))
             sys.exit()
         
-        for i in xrange(last_rank+1, len(Taxonomy.rank_prefixes)):
+        for i in range(last_rank+1, len(Taxonomy.rank_prefixes)):
             taxa.append(Taxonomy.rank_prefixes[i])
             
         return taxa
@@ -194,7 +194,7 @@ class Taxonomy(object):
                 new_taxa.append(t)
             elif rank_index - prev_rank_index > 1:
                 # fill in all missing ranks
-                for r in xrange(prev_rank_index+1, rank_index):
+                for r in range(prev_rank_index+1, rank_index):
                     new_taxa.append(Taxonomy.rank_prefixes[r])
                 new_taxa.append(t)
             elif warning:
@@ -226,14 +226,14 @@ class Taxonomy(object):
         """
 
         expected_parent = {}
-        for genome_id, taxa in taxonomy.iteritems():
+        for genome_id, taxa in taxonomy.items():
             if taxa[0] == 'd__Viruses' or '[P]' in taxa[0]:
                 # *** This is a HACK. It would be far better to enforce
                 # a taxonomically consistent taxonomy, but
                 # the viral taxonomy at IMG is currently not consistent
                 continue
 
-            for r in xrange(1, len(taxa)):
+            for r in range(1, len(taxa)):
                 if len(taxa[r]) == 3:
                     break
 
@@ -384,7 +384,7 @@ class Taxonomy(object):
 
         # identify taxon belonging to multiple lineages
         duplicates = {}
-        for taxon, lineages in taxon_lineages.iteritems():
+        for taxon, lineages in taxon_lineages.items():
             if len(lineages) >= 2:
                 if not taxon.startswith('s__') or check_species:
                     duplicates[taxon] = lineages
@@ -437,7 +437,7 @@ class Taxonomy(object):
         invalid_prefixes = {}
         invalid_species_name = {}
         invalid_group_name = {}
-        for taxon_id, taxa in taxonomy.iteritems():
+        for taxon_id, taxa in taxonomy.items():
             if check_ranks:
                 if len(taxa) != len(Taxonomy.rank_prefixes):
                     invalid_ranks[taxon_id] = ';'.join(taxa)
@@ -481,8 +481,8 @@ class Taxonomy(object):
         missing_parent = set()
         if check_hierarchy:
             expected_parent = self.taxonomic_consistency(taxonomy, False)
-            for taxon_id, taxa in taxonomy.iteritems():
-                for r in xrange(1, len(taxa)):
+            for taxon_id, taxa in taxonomy.items():
+                for r in range(1, len(taxa)):
                     if len(taxa[r]) == 3:
                         continue
 
@@ -499,25 +499,25 @@ class Taxonomy(object):
             if len(invalid_ranks):
                 print('')
                 print('Taxonomy contains too few ranks:')
-                for taxon_id, taxa_str in invalid_ranks.iteritems():
+                for taxon_id, taxa_str in invalid_ranks.items():
                     print('%s\t%s' % (taxon_id, taxa_str))
 
             if len(invalid_prefixes):
                 print('')
                 print('Taxonomy contains an invalid rank prefix:')
-                for taxon_id, info in invalid_prefixes.iteritems():
+                for taxon_id, info in invalid_prefixes.items():
                     print('%s\t%s\t%s' % (taxon_id, info[0], info[1]))
                     
             if len(invalid_group_name):
                 print('')
                 print('Taxa containing invalid characters:')
-                for taxon_id, err_msg in invalid_group_name.iteritems():
+                for taxon_id, err_msg in invalid_group_name.items():
                     print('%s\t%s\t%s' % (taxon_id, err_msg[0], err_msg[1]))
 
             if len(invalid_species_name):
                 print('')
                 print('Taxonomy contains invalid species names:')
-                for taxon_id, info in invalid_species_name.iteritems():
+                for taxon_id, info in invalid_species_name.items():
                     print('%s\t%s\t%s' % (taxon_id, info[0], info[1]))
                     
             if len(invalid_duplicate_name):
@@ -535,7 +535,7 @@ class Taxonomy(object):
             if len(invalid_hierarchies):
                 print('')
                 print('Taxonomy contains taxa with multiple parents:')
-                for child_taxon, parent_taxa in invalid_hierarchies.iteritems():
+                for child_taxon, parent_taxa in invalid_hierarchies.items():
                     print('%s\t%s' % (child_taxon, ', '.join(parent_taxa)))
 
         return invalid_ranks, invalid_prefixes, invalid_species_name, invalid_hierarchies, invalid_group_name
@@ -557,7 +557,7 @@ class Taxonomy(object):
         """
 
         taxon_children = defaultdict(set)
-        for taxon_id, taxa in taxonomy.iteritems():
+        for taxon_id, taxa in taxonomy.items():
             for i, taxon in enumerate(taxa):
                 if len(taxon) == 3:
                     continue  # just rank prefix
@@ -593,7 +593,7 @@ class Taxonomy(object):
         """
 
         c = set()
-        for taxon_id, taxa in taxonomy.iteritems():
+        for taxon_id, taxa in taxonomy.items():
             if taxon in taxa:
 
                 if taxon.startswith('s__'):
@@ -621,7 +621,7 @@ class Taxonomy(object):
         """
 
         p = defaultdict(list)
-        for taxon_id, taxa in taxonomy.iteritems():
+        for taxon_id, taxa in taxonomy.items():
             p[taxon_id] = taxa
             for i, taxon in enumerate(taxa):
                 if i != 0:
@@ -669,7 +669,7 @@ class Taxonomy(object):
 
         d = defaultdict(set)
         rank_index = Taxonomy.rank_labels.index(rank_label)
-        for taxon_id, taxa in taxonomy.iteritems():
+        for taxon_id, taxa in taxonomy.items():
             if taxa[rank_index] != Taxonomy.rank_prefixes[rank_index]:
                 d[taxa[rank_index]].add(taxon_id)
 
@@ -832,7 +832,7 @@ class Taxonomy(object):
         """
 
         fout = open(output_file, 'w')
-        for genome_id, taxa in taxonomy.iteritems():
+        for genome_id, taxa in taxonomy.items():
             fout.write(genome_id + '\t' + ';'.join(taxa) + '\n')
         fout.close()
         

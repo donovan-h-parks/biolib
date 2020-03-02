@@ -70,7 +70,7 @@ class Krona():
         for unique_id in alphanumeric_sort(profiles.keys()):
             tmp_file = os.path.join(tmp_dir, unique_id)
             fout = open(tmp_file, 'w')
-            for element_str, num_hits in profiles[unique_id].iteritems():
+            for element_str, num_hits in profiles[unique_id].items():
                 elements = [x.strip() for x in element_str.split(';')]
                 fout.write(str(num_hits) + '\t' + '\t'.join(elements) + '\n')
             fout.close()

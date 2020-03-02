@@ -25,6 +25,7 @@ __email__ = 'donovan.parks@gmail.com'
 
 import sys
 import logging
+from pathlib import PurePath
 from collections import namedtuple
 
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
@@ -79,6 +80,9 @@ class AbstractPlot(FigureCanvas):
     def save_plot(self, filename, dpi=300):
         """Save plot to file."""
 
+        if isinstance(filename, str):
+            filename = PurePath(filename)
+            
         img_format = filename.suffix
         if img_format in ['.png', '.pdf', '.ps', '.eps', '.svg']:
             self.fig.savefig(filename.as_posix(), 

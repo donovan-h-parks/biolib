@@ -18,5 +18,5 @@ setup(
     url='http://pypi.python.org/pypi/biolib/',
     license='GPL3',
     description='Package for common tasks in bioinformatic.',
-    install_requires=["future >= 0.16.0"],
+    install_requires=[],
 )
