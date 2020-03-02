@@ -1,3 +1,6 @@
+0.0.52
+- fix to calling command to create DIAMOND database
+
 0.0.51
 -- fix to identifying contigs in scaffolds
 -- updated interfaces to external programs

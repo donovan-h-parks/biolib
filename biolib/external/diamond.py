@@ -74,7 +74,7 @@ class Diamond(object):
         db_file : str
             Desired name of Diamond database.
         """
-        os.system(self.create_blastp_db_cmd(prot_file, db_file))
+        os.system(self.create_db_cmd(prot_file, db_file))
         
     def blastp_cmd(self, prot_file, 
                     db_file, 
