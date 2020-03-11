@@ -733,7 +733,7 @@ class Taxonomy(object):
             Taxa indexed by unique ids.
         """
 
-        if isinstance(tree, basestring):
+        if isinstance(tree, str):
             tree = dendropy.Tree.get_from_path(tree, 
                                                 schema='newick', 
                                                 rooting="force-rooted", 
