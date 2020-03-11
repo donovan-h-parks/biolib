@@ -202,7 +202,7 @@ class Blast():
     def create_blastp_db(self, prot_file, db_file):
         """Create protein database."""
 
-        os.system(self.create_blastp_db_cmnd(prot_file, db_file))
+        os.system(self.create_blastp_db_cmd(prot_file, db_file))
 
     def read_hit(self, table, table_fmt):
         """Generator function to read hits from a blast output table.
