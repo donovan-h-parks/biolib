@@ -1,3 +1,6 @@
+0.1.3
+- fixed reading of compressed sequence files so output is text and not binary
+
 0.1.2
 - fixed test for string in read_from_tree() in taxonomy.py
 

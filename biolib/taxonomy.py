@@ -118,18 +118,18 @@ class Taxonomy(object):
 
         taxa = [x.strip() for x in tax_str.split(';')]
         if len(taxa) < len(Taxonomy.rank_prefixes):
-            self.logger.error('[Error] Taxonomy string contains too few ranks:')
-            self.logger.error('[Error] %s' % str(taxa))
+            self.logger.error('Taxonomy string contains too few ranks:')
+            self.logger.error('%s' % str(taxa))
             return False
         elif len(taxa) > len(Taxonomy.rank_prefixes):
-            self.logger.error('[Error] Taxonomy string contains too many ranks:')
-            self.logger.error('[Error] %s' % str(taxa))
+            self.logger.error('Taxonomy string contains too many ranks:')
+            self.logger.error('%s' % str(taxa))
             return False
 
         for r, taxon in enumerate(taxa):
             if taxon[0:3] != Taxonomy.rank_prefixes[r]:
-                self.logger.error('[Error] Taxon is not prefixed with the expected rank, %s.:' % Taxonomy.rank_prefixes[r])
-                self.logger.error('[Error] %s' % str(taxa))
+                self.logger.error('Taxon is not prefixed with the expected rank, %s.:' % Taxonomy.rank_prefixes[r])
+                self.logger.error('%s' % str(taxa))
                 return False
 
         return True
@@ -765,8 +765,7 @@ class Taxonomy(object):
                 node = node.parent_node
 
             if warnings and len(taxa) > 7:
-                self.logger.warning('Invalid taxonomy string read from tree for taxon %s: %s' % (leaf.taxon.label, taxa))
-                #sys.exit(-1)
+                self.logger.warning('Invalid taxonomy string read from tree for taxon %s: %s' % (leaf.taxon.label, ';'.join(taxa)))
 
             # check if genus name should be appended to species label
             if len(taxa) == 7:

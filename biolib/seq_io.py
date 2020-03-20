@@ -172,7 +172,7 @@ def read_fasta(fasta_file, keep_annotation=False):
             open_file = gzip.open
 
         seqs = {}
-        for line in open_file(fasta_file):
+        for line in open_file(fasta_file, 'rt'):
             # skip blank lines
             if not line.strip():
                 continue
@@ -225,7 +225,7 @@ def read_fastq(fastq_file):
 
         seqs = {}
         line_num = 0
-        for line in open_file(fastq_file):
+        for line in open_file(fastq_file, 'rt'):
             line_num += 1
 
             if line_num == 1:
@@ -322,7 +322,7 @@ def read_fasta_seq(fasta_file, keep_annotation=False):
         seq_id = None
         annotation = None
         seq = None
-        for line in open_file(fasta_file):
+        for line in open_file(fasta_file, 'rt'):
             # skip blank lines
             if not line.strip():
                 continue
@@ -394,7 +394,7 @@ def read_fastq_seq(fastq_file):
             open_file = gzip.open
 
         line_num = 0
-        for line in open_file(fastq_file):
+        for line in open_file(fastq_file, 'rt'):
             line_num += 1
 
             if line_num == 1:
