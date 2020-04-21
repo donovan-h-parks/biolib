@@ -47,6 +47,14 @@ class Taxonomy(object):
 
     Spaces after the semi-colons are optional.
     """
+    
+    DOMAIN_INDEX = 0
+    PHYLUM_INDEX = 1
+    CLASS_INDEX = 2
+    ORDER_INDEX = 3
+    FAMILY_INDEX = 4
+    GENUS_INDEX = 5
+    SPECIES_INDEX = 6
 
     rank_prefixes = ('d__', 'p__', 'c__', 'o__', 'f__', 'g__', 's__')
     rank_labels = ('domain', 'phylum', 'class', 'order', 'family', 'genus', 'species')

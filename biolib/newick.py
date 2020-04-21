@@ -47,7 +47,7 @@ def parse_label(label):
     if label:
         label = label.strip()
         if '|' in label:
-            label, auxiliary_info = label.split('|')
+            label, auxiliary_info = label.split('|', 1)
 
         if ':' in label:
             support, taxon = label.split(':')
