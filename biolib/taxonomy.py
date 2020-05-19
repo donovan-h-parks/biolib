@@ -27,7 +27,7 @@ import logging
 import re
 from collections import defaultdict
 
-from biolib.common import is_float, check_file_exists
+from biolib.common import is_float, check_file_exists, canonical_gid
 
 import dendropy
 
@@ -787,7 +787,7 @@ class Taxonomy(object):
 
         return taxonomy
 
-    def read(self, taxonomy_file):
+    def read(self, taxonomy_file, use_canonical_gid = False):
         """Read Greengenes-style taxonomy file.
 
         Expected format is:
@@ -814,6 +814,7 @@ class Taxonomy(object):
             for row, line in enumerate(open(taxonomy_file)):
                 line_split = line.split('\t')
                 unique_id = line_split[0]
+                unique_id = canonical_gid(unique_id)
                 
                 tax_str = line_split[1].rstrip()
                 if tax_str[-1] == ';':
