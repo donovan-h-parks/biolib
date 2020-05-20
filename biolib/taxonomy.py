@@ -814,7 +814,9 @@ class Taxonomy(object):
             for row, line in enumerate(open(taxonomy_file)):
                 line_split = line.split('\t')
                 unique_id = line_split[0]
-                unique_id = canonical_gid(unique_id)
+                
+                if use_canonical_gid:
+                    unique_id = canonical_gid(unique_id)
                 
                 tax_str = line_split[1].rstrip()
                 if tax_str[-1] == ';':
