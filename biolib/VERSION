@@ -1,3 +1,7 @@
+0.1.6
+- modified automated appending of genus to the species name in read_from_tree() to only occur when species name contains a single name
+- added check_capitalization test to Taxonomy.validate()
+
 0.1.5
 - improved parsing of Newick labels
 

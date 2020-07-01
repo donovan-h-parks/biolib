@@ -406,6 +406,7 @@ class Taxonomy(object):
                         check_species, 
                         check_group_names,
                         check_duplicate_names,
+                        check_capitalization,
                         report_errors=True):
         """Check if taxonomy forms a strict hierarchy with all expected ranks.
 
@@ -445,6 +446,7 @@ class Taxonomy(object):
         invalid_prefixes = {}
         invalid_species_name = {}
         invalid_group_name = {}
+        invalid_capitalization = set()
         for taxon_id, taxa in taxonomy.items():
             if check_ranks:
                 if len(taxa) != len(Taxonomy.rank_prefixes):
@@ -478,6 +480,11 @@ class Taxonomy(object):
                         generic_name = species_name.split()[0]
                         if genus_name[3:] != generic_name[3:]:
                             invalid_species_name[taxon_id] = [species_name, 'Genus and generic names do not match: %s' % genus_name]
+                            
+            if check_capitalization:
+                for taxon in taxa:
+                    if taxon[3].islower():
+                        invalid_capitalization.add(taxon)
                         
         # check for duplicate names
         invalid_duplicate_name = []
@@ -546,8 +553,14 @@ class Taxonomy(object):
                 print('Taxonomy contains taxa with multiple parents:')
                 for child_taxon, parent_taxa in invalid_hierarchies.items():
                     print('%s\t%s' % (child_taxon, ', '.join(parent_taxa)))
+                    
+            if len(invalid_capitalization):
+                print('')
+                print('Taxa do not start with a capital letter:')
+                for taxon in invalid_capitalization:
+                    print('{}'.format(taxon))
 
-        return invalid_ranks, invalid_prefixes, invalid_species_name, invalid_hierarchies, invalid_group_name
+        return invalid_ranks, invalid_prefixes, invalid_species_name, invalid_hierarchies, invalid_group_name, invalid_capitalization
 
     def taxon_children(self, taxonomy):
         """Get children taxa for each taxonomic group.
@@ -779,7 +792,7 @@ class Taxonomy(object):
             if len(taxa) == 7:
                 genus = taxa[5][3:]
                 species = taxa[6][3:]
-                if genus not in species:
+                if genus not in species and len(species.split()) == 1:
                     taxa[6] = 's__' + genus + ' ' + species
 
             taxa = self.fill_trailing_ranks(taxa)
