@@ -99,7 +99,7 @@ class Scatter2(AbstractPlot):
             np_max([axes_scatter.get_xlim(), axes_scatter.get_ylim()]),  # max of both axes
         ]
 
-        # now plot both limits against eachother
+        # now plot both limits against each other
         print('y=x')
         axes_scatter.plot(lims, lims, 'r-', alpha=0.5, zorder=5)
         

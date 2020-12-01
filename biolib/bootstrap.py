@@ -100,12 +100,13 @@ def bootstrap_alignment(msa, output_file, frac=1.0):
     frac : float
       Fraction of alignment to subsample.
     """
-    alignment_len = len(msa[msa.keys()[0]])
+    
+    alignment_len = len(msa[list(msa.keys())[0]])
     sample_len = int(alignment_len * frac)
-    cols = [random.randint(0, alignment_len - 1) for _ in xrange(sample_len)]
+    cols = [random.randint(0, alignment_len - 1) for _ in range(sample_len)]
 
     fout = open(output_file, 'w')
-    for seq_id, seq in msa.iteritems():
+    for seq_id, seq in msa.items():
         fout.write('>' + seq_id + '\n')
         for col in cols:
             fout.write(seq[col])

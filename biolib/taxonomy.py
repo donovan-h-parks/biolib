@@ -442,49 +442,53 @@ class Taxonomy(object):
         """
         
         # check for incomplete taxonomy strings or unexpected rank prefixes
-        invalid_ranks = {}
-        invalid_prefixes = {}
-        invalid_species_name = {}
-        invalid_group_name = {}
-        invalid_capitalization = set()
-        for taxon_id, taxa in taxonomy.items():
-            if check_ranks:
-                if len(taxa) != len(Taxonomy.rank_prefixes):
-                    invalid_ranks[taxon_id] = ';'.join(taxa)
-                    continue
+        try:
+            invalid_ranks = {}
+            invalid_prefixes = {}
+            invalid_species_name = {}
+            invalid_group_name = {}
+            invalid_capitalization = set()
+            for taxon_id, taxa in taxonomy.items():
+                if check_ranks:
+                    if len(taxa) != len(Taxonomy.rank_prefixes):
+                        invalid_ranks[taxon_id] = ';'.join(taxa)
+                        continue
 
-            if check_prefixes:
-                for r, taxon in enumerate(taxa):
-                    if taxon[0:3] != Taxonomy.rank_prefixes[r]:
-                        invalid_prefixes[taxon_id] = [taxon, ';'.join(taxa)]
-                        break
-                        
-            if check_group_names:
-                for taxon in taxa:
-                    canonical_taxon = ' '.join([t.strip() for t in re.split('_[A-Z]+(?= |$)', taxon[3:])]).strip()
-                    if canonical_taxon and re.match('^[a-zA-Z0-9- ]+$', canonical_taxon) is None:
-                        if not taxon.startswith('s__') or check_species:
-                            invalid_group_name[taxon_id] = [taxon, 'Taxon contains invalid characters']
-
-            if check_species:
-                genus_index = Taxonomy.rank_index['g__']
-                species_index = Taxonomy.rank_index['s__']
-                if len(taxa) > species_index:
-                    species_name = taxa[species_index]
-                    valid, error_msg = self.validate_species_name(species_name, require_full=True, require_prefix=True)
-                    if not valid:
-                        invalid_species_name[taxon_id] = [species_name, error_msg]
-                        
-                    if species_name != 's__':
-                        genus_name = taxa[genus_index]
-                        generic_name = species_name.split()[0]
-                        if genus_name[3:] != generic_name[3:]:
-                            invalid_species_name[taxon_id] = [species_name, 'Genus and generic names do not match: %s' % genus_name]
+                if check_prefixes:
+                    for r, taxon in enumerate(taxa):
+                        if taxon[0:3] != Taxonomy.rank_prefixes[r]:
+                            invalid_prefixes[taxon_id] = [taxon, ';'.join(taxa)]
+                            break
                             
-            if check_capitalization:
-                for taxon in taxa:
-                    if taxon[3].islower():
-                        invalid_capitalization.add(taxon)
+                if check_group_names:
+                    for taxon in taxa:
+                        canonical_taxon = ' '.join([t.strip() for t in re.split('_[A-Z]+(?= |$)', taxon[3:])]).strip()
+                        if canonical_taxon and re.match('^[a-zA-Z0-9- ]+$', canonical_taxon) is None:
+                            if not taxon.startswith('s__') or check_species:
+                                invalid_group_name[taxon_id] = [taxon, 'Taxon contains invalid characters']
+
+                if check_species:
+                    genus_index = Taxonomy.rank_index['g__']
+                    species_index = Taxonomy.rank_index['s__']
+                    if len(taxa) > species_index:
+                        species_name = taxa[species_index]
+                        valid, error_msg = self.validate_species_name(species_name, require_full=True, require_prefix=True)
+                        if not valid:
+                            invalid_species_name[taxon_id] = [species_name, error_msg]
+                            
+                        if species_name != 's__':
+                            genus_name = taxa[genus_index]
+                            generic_name = species_name.split()[0]
+                            if genus_name[3:] != generic_name[3:]:
+                                invalid_species_name[taxon_id] = [species_name, 'Genus and generic names do not match: %s' % genus_name]
+                                
+                if check_capitalization:
+                    for taxon in taxa:
+                        if len(taxon) > 3 and taxon[3].islower():
+                            invalid_capitalization.add(taxon)
+        except:
+            self.logger.error('Exception raised while processing {} with the taxa set {}'.format(taxon_id, taxa))
+            raise
                         
         # check for duplicate names
         invalid_duplicate_name = []

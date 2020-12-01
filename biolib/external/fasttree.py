@@ -222,3 +222,5 @@ class FastTree():
         else:
             cmd = 'FastTree ' + cmd
             os.system(cmd)
+            
+        return cmd
