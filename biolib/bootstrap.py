@@ -24,8 +24,6 @@ __email__ = 'donovan.parks@gmail.com'
 
 import random
 
-import dendropy
-
 from biolib.newick import parse_label, create_label
 
 """Perform non-parametric bootstrapping on multiple sequence alignment."""
@@ -42,6 +40,9 @@ def bootstrap_support(input_tree, replicate_trees, output_tree):
     output_tree: str
       Name of output tree with support values.
     """
+    
+    import dendropy
+    
     # read tree and bootstrap replicates as unrooted, and
     # calculate bootstrap support
     orig_tree = dendropy.Tree.get_from_path(input_tree, 
@@ -56,7 +57,7 @@ def bootstrap_support(input_tree, replicate_trees, output_tree):
                                     ignore_edge_lengths=True,
                                     ignore_node_ages=True,
                                     use_tree_weights=False)
-
+                                    
     rep_trees.read_from_files(files=replicate_trees,
                                 schema='newick',
                                 rooting="force-unrooted",

@@ -29,8 +29,6 @@ from collections import defaultdict
 
 from biolib.common import is_float, check_file_exists, canonical_gid
 
-import dendropy
-
 """
 To do:
  1. There is a serious hack in taxonomic_consistency which should be resolved, but
@@ -759,6 +757,7 @@ class Taxonomy(object):
         """
 
         if isinstance(tree, str):
+            import dendropy
             tree = dendropy.Tree.get_from_path(tree, 
                                                 schema='newick', 
                                                 rooting="force-rooted", 
