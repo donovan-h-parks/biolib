@@ -1,3 +1,6 @@
+0.1.8
+- added skip_species flag to decorate method
+
 0.1.7
 - updated bootstrap.py to make it Python 3 compliant
 - added API for FastANI and MASH
