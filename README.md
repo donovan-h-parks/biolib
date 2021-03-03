@@ -3,8 +3,9 @@
 <b>[This library is in active development and not currently recommended for public use.]</b>
 
 [![version status](https://img.shields.io/pypi/v/biolib.svg)](https://pypi.python.org/pypi/biolib)
+[![Bioconda](https://img.shields.io/conda/vn/bioconda/biolib.svg?color=43b02a)](https://anaconda.org/bioconda/biolib)
 
-Biolib is a python package for common tasks in bioinformatic.
+Biolib is a python package for common tasks in bioinformatics.
 
 ## Announcements
 
@@ -13,7 +14,10 @@ Biolib is a python package for common tasks in bioinformatic.
 ## Install
 
 The simplest way to install this package is through pip:
-> pip install biolib
+
+```shell
+python -m pip install biolib
+```
 
 ## Cite
 

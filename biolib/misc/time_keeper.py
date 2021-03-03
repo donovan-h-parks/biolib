@@ -17,6 +17,7 @@
 
 import time
 import logging
+from functools import reduce
 
 
 class TimeKeeper:

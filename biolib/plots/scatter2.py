@@ -116,12 +116,12 @@ class Scatter2(AbstractPlot):
         # plot histograms
         if not show_histograms:
             for a in axes_scatter.yaxis.majorTicks:
-                    a.tick1On=True
-                    a.tick2On=False
+                    a.tick1line.set_visible(True)
+                    a.tick2line.set_visible(False)
                 
             for a in axes_scatter.xaxis.majorTicks:
-                    a.tick1On=True
-                    a.tick2On=False
+                    a.tick1line.set_visible(True)
+                    a.tick2line.set_visible(False)
                     
             for line in axes_scatter.yaxis.get_ticklines(): 
                 line.set_color(self.axes_colour)
@@ -129,7 +129,7 @@ class Scatter2(AbstractPlot):
             for line in axes_scatter.xaxis.get_ticklines(): 
                 line.set_color(self.axes_colour)
 
-            for loc, spine in axes_scatter.spines.iteritems():
+            for loc, spine in axes_scatter.spines.items():
                     if loc in ['right','top']:
                             spine.set_color('none')
                     else:
@@ -137,7 +137,7 @@ class Scatter2(AbstractPlot):
             
         else: # show histograms 
             # get bin weights for percentage histogram plot
-            weights = [100.0/len(x) for _ in xrange(0, len(x))]
+            weights = [100.0/len(x) for _ in range(0, len(x))]
         
             # plot top histogram
             axes_top_histogram.xaxis.set_major_formatter(NullFormatter())
@@ -178,12 +178,12 @@ class Scatter2(AbstractPlot):
 
             # *** Prettify histogram plot
             for a in axes_top_histogram.yaxis.majorTicks:
-                    a.tick1On=False
-                    a.tick2On=True
+                    a.tick1line.set_visible(False)
+                    a.tick2line.set_visible(True)
                 
             for a in axes_top_histogram.xaxis.majorTicks:
-                    a.tick1On=True
-                    a.tick2On=False
+                    a.tick1line.set_visible(True)
+                    a.tick2line.set_visible(False)
                     
             for line in axes_top_histogram.yaxis.get_ticklines(): 
                 line.set_color(self.axes_colour)
@@ -191,19 +191,19 @@ class Scatter2(AbstractPlot):
             for line in axes_top_histogram.xaxis.get_ticklines(): 
                 line.set_color(self.axes_colour)
 
-            for loc, spine in axes_top_histogram.spines.iteritems():
+            for loc, spine in axes_top_histogram.spines.items():
                     if loc in ['left','top']:
                             spine.set_color('none')
                     else:
                         spine.set_color(self.axes_colour)
 
             for a in axes_right_histogram.yaxis.majorTicks:
-                    a.tick1On=True
-                    a.tick2On=False
+                    a.tick1line.set_visible(True)
+                    a.tick2line.set_visible(False)
                 
             for a in axes_right_histogram.xaxis.majorTicks:
-                    a.tick1On=True
-                    a.tick2On=False
+                    a.tick1line.set_visible(True)
+                    a.tick2line.set_visible(False)
                     
             for line in axes_right_histogram.yaxis.get_ticklines(): 
                 line.set_color(self.axes_colour)
@@ -211,8 +211,8 @@ class Scatter2(AbstractPlot):
             for line in axes_right_histogram.xaxis.get_ticklines(): 
                 line.set_color(self.axes_colour)
 
-            for loc, spine in axes_right_histogram.spines.iteritems():
-                    if loc in ['right','top']:
+            for loc, spine in axes_right_histogram.spines.items():
+                    if loc in ['right', 'top']:
                             spine.set_color('none') 
                     else:
                         spine.set_color(self.axes_colour)
