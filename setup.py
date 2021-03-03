@@ -21,7 +21,7 @@ setup(
     package_data={'biolib': ['VERSION']},
     url='http://pypi.python.org/pypi/biolib/',
     license='GPL3',
-    description='Package for common tasks in bioinformatic.',
+    description='Package for common tasks in bioinformatics.',
     long_description=long_description,
     long_description_content_type="text/markdown",
     classifiers=[
@@ -34,5 +34,5 @@ setup(
         'Programming Language :: Python :: 3.8',
         'Topic :: Scientific/Engineering :: Bio-Informatics',
     ],
-    install_requires=[],
+    install_requires=['numpy', 'matplotlib', 'scipy'],
 )
