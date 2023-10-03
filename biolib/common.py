@@ -36,7 +36,7 @@ from numpy import (abs as np_abs,
 
 def canonical_gid(gid):
     """Get canonical form of NCBI genome accession.
-    
+
     Example:
         G005435135 -> G005435135
         GCF_005435135.1 -> G005435135
@@ -44,18 +44,18 @@ def canonical_gid(gid):
         RS_GCF_005435135.1 -> G005435135
         GB_GCA_005435135.1 -> G005435135
     """
-    
+
     if gid.startswith('U'):
         return gid
-        
+
     gid = gid.replace('RS_', '').replace('GB_', '')
     gid = gid.replace('GCA_', 'G').replace('GCF_', 'G')
     if '.' in gid:
         gid = gid[0:gid.find('.')]
-    
+
     return gid
-    
-    
+
+
 def query_yes_no(question, default="yes"):
     """Ask a yes/no question via raw_input() and return their answer.
 
@@ -136,7 +136,7 @@ def find_nearest(array, value):
         Closest element in 'array' to 'value'.
 
     """
-    
+
     idx = (np_abs(np_array(array) - value)).argmin()
     return array[idx]
 
@@ -173,12 +173,12 @@ def concatenate_files(input_files, output_file, common_header=False):
                             pass
                     else:
                         outfile.write(line)
-                        
+
                 # force newline between files
                 if line[-1] != '\n':
                     outfile.write('\n')
 
-                        
+
 def alphanumeric_sort(l):
     """Sorts the given iterable alphanumerically.
 
@@ -194,8 +194,8 @@ def alphanumeric_sort(l):
     iterable
         Iterable sorted alphanumerically.
     """
-    convert = lambda text: int(text) if text.isdigit() else text
-    alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
+    def convert(text): return int(text) if text.isdigit() else text
+    def alphanum_key(key): return [convert(c) for c in re.split('([0-9]+)', key)]
     return sorted(l, key=alphanum_key)
 
 

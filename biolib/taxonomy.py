@@ -45,7 +45,7 @@ class Taxonomy(object):
 
     Spaces after the semi-colons are optional.
     """
-    
+
     DOMAIN_INDEX = 0
     PHYLUM_INDEX = 1
     CLASS_INDEX = 2
@@ -139,7 +139,7 @@ class Taxonomy(object):
                 return False
 
         return True
-        
+
     def fill_trailing_ranks(self, taxa):
         """Fill in missing trailing ranks in a taxonomy string.
 
@@ -153,7 +153,7 @@ class Taxonomy(object):
         list
             List of taxa with filled trailing ranks.
         """
-        
+
         if not taxa:
             return ';'.join(Taxonomy.rank_prefixes)
 
@@ -162,10 +162,10 @@ class Taxonomy(object):
         except:
             self.logger.error('Taxon is missing rank prefix: %s' % ';'.join(taxa))
             sys.exit()
-        
+
         for i in range(last_rank+1, len(Taxonomy.rank_prefixes)):
             taxa.append(Taxonomy.rank_prefixes[i])
-            
+
         return taxa
 
     def fill_missing_ranks(self, taxa, warning=True):
@@ -174,7 +174,7 @@ class Taxonomy(object):
         This function assumes the taxonomic ranks are
         in the proper rank order, but that some ranks may
         be missing.
-        
+
         e.g., [d__<taxon>, p__<taxon>, p__<taxon>, f__<taxon>, s__<taxon>]
 
         Parameters
@@ -187,7 +187,7 @@ class Taxonomy(object):
         list
             List of taxa with all ranks.
         """
-        
+
         new_taxa = []
         prev_rank_index = -1
         for t in taxa:
@@ -207,11 +207,11 @@ class Taxonomy(object):
                 # current rank is more basal than previous rank
                 print('Taxa have none canonical rank ordering: %s' % taxa)
                 return taxa
-                
+
             prev_rank_index = rank_index
-            
+
         new_taxa = self.fill_trailing_ranks(new_taxa)
-                
+
         return new_taxa
 
     def taxonomic_consistency(self, taxonomy, report_errors=True):
@@ -316,15 +316,15 @@ class Taxonomy(object):
         str
             Reason for failing validation, otherwise None.
         """
-        
+
         if species_name == 's__':
             return True, None
-        
+
         # test for prefix
         if require_prefix:
             if not species_name.startswith('s__'):
                 return False, 'name is missing the species prefix'
-            
+
         # remove prefix before testing other properties
         test_name = species_name
         if test_name.startswith('s__'):
@@ -366,21 +366,21 @@ class Taxonomy(object):
             return False, "name contains 'sp.'"
 
         return True, None
-        
+
     def duplicate_names(self, taxonomy, check_species=True):
         """Identify duplicate names in taxonomy.
-        
+
         Parameters
         ----------
         taxonomy : d[unique_id] -> [d__<taxon>; ...; s__<taxon>]
             Taxonomy strings indexed by unique ids.
-            
+
         Returns
         -------
         dict : d[taxon] -> lineages
             List of lineages for duplicate taxa.
         """
-        
+
         # get lineages for each taxon name
         taxon_lineages = defaultdict(set)
         for taxa in taxonomy.values():
@@ -394,14 +394,14 @@ class Taxonomy(object):
             if len(lineages) >= 2:
                 if not taxon.startswith('s__') or check_species:
                     duplicates[taxon] = lineages
-        
+
         return duplicates
 
     def validate(self, taxonomy,
-                        check_prefixes, 
-                        check_ranks, 
-                        check_hierarchy, 
-                        check_species, 
+                        check_prefixes,
+                        check_ranks,
+                        check_hierarchy,
+                        check_species,
                         check_group_names,
                         check_duplicate_names,
                         check_capitalization,
@@ -438,7 +438,7 @@ class Taxonomy(object):
         dict: d[child_taxon_id] -> two or more parent taxon ids
             Taxa with invalid hierarchies.
         """
-        
+
         # check for incomplete taxonomy strings or unexpected rank prefixes
         try:
             invalid_ranks = {}
@@ -457,7 +457,7 @@ class Taxonomy(object):
                         if taxon[0:3] != Taxonomy.rank_prefixes[r]:
                             invalid_prefixes[taxon_id] = [taxon, ';'.join(taxa)]
                             break
-                            
+
                 if check_group_names:
                     for taxon in taxa:
                         canonical_taxon = ' '.join([t.strip() for t in re.split('_[A-Z]+(?= |$)', taxon[3:])]).strip()
@@ -473,13 +473,13 @@ class Taxonomy(object):
                         valid, error_msg = self.validate_species_name(species_name, require_full=True, require_prefix=True)
                         if not valid:
                             invalid_species_name[taxon_id] = [species_name, error_msg]
-                            
+
                         if species_name != 's__':
                             genus_name = taxa[genus_index]
                             generic_name = species_name.split()[0]
                             if genus_name[3:] != generic_name[3:]:
                                 invalid_species_name[taxon_id] = [species_name, 'Genus and generic names do not match: %s' % genus_name]
-                                
+
                 if check_capitalization:
                     for taxon in taxa:
                         if len(taxon) > 3 and taxon[3].islower():
@@ -487,12 +487,12 @@ class Taxonomy(object):
         except:
             self.logger.error('Exception raised while processing {} with the taxa set {}'.format(taxon_id, taxa))
             raise
-                        
+
         # check for duplicate names
         invalid_duplicate_name = []
         if check_duplicate_names:
             invalid_duplicate_name = self.duplicate_names(taxonomy, check_species)
-            
+
         # check for inconsistencies in the taxonomic hierarchy
         invalid_hierarchies = defaultdict(set)
         missing_parent = set()
@@ -506,7 +506,7 @@ class Taxonomy(object):
 
                     if r == self.rank_index['s__'] and not check_species:
                         continue
-                        
+
                     if taxa[r] not in expected_parent:
                         missing_parent.add(taxa[r])
                     elif taxa[r - 1] != expected_parent[taxa[r]]:
@@ -525,7 +525,7 @@ class Taxonomy(object):
                 print('Taxonomy contains an invalid rank prefix:')
                 for taxon_id, info in invalid_prefixes.items():
                     print('%s\t%s\t%s' % (taxon_id, info[0], info[1]))
-                    
+
             if len(invalid_group_name):
                 print('')
                 print('Taxa containing invalid characters:')
@@ -537,13 +537,13 @@ class Taxonomy(object):
                 print('Taxonomy contains invalid species names:')
                 for taxon_id, info in invalid_species_name.items():
                     print('%s\t%s\t%s' % (taxon_id, info[0], info[1]))
-                    
+
             if len(invalid_duplicate_name):
                 print('')
                 print('Taxonomy contains identical taxon names in multiple lineages:')
                 for duplicate_name in invalid_duplicate_name.keys():
                     print('%s' % duplicate_name)
-                    
+
             if len(missing_parent):
                 print('')
                 print('Taxonomy contains taxa with an undefined parent:')
@@ -555,7 +555,7 @@ class Taxonomy(object):
                 print('Taxonomy contains taxa with multiple parents:')
                 for child_taxon, parent_taxa in invalid_hierarchies.items():
                     print('%s\t%s' % (child_taxon, ', '.join(parent_taxa)))
-                    
+
             if len(invalid_capitalization):
                 print('')
                 print('Taxa do not start with a capital letter:')
@@ -652,7 +652,7 @@ class Taxonomy(object):
                     p[taxon] = taxa[0:i]
 
         return p
-        
+
     def extant_taxa(self, taxonomy):
         """Get extant taxa for all taxa.
 
@@ -666,11 +666,11 @@ class Taxonomy(object):
         dict : d[taxon] -> set of extant taxa
             Extant taxa for named groups at the specified rank.
         """
-        
+
         extant_taxa = {}
         for rank_label in Taxonomy.rank_labels:
             extant_taxa.update(self.extant_taxa_for_rank(rank_label, taxonomy))
-            
+
         return extant_taxa
 
     def extant_taxa_for_rank(self, rank_label, taxonomy):
@@ -698,7 +698,7 @@ class Taxonomy(object):
                 d[taxa[rank_index]].add(taxon_id)
 
         return d
-        
+
     def named_lineages_at_rank(self, taxonomy):
         """Get named lineages at each taxonomic rank.
 
@@ -712,15 +712,15 @@ class Taxonomy(object):
         dict : d[rank] -> set of taxa
             Taxa at each taxonomic rank.
         """
-        
+
         named_lineages = defaultdict(set)
         for taxa in taxonomy.values():
             for i, taxon in enumerate(taxa):
                 if taxon != Taxonomy.rank_prefixes[i]:
                     named_lineages[i].add(taxon)
-            
+
         return named_lineages
-        
+
     def lineages(self, taxonomy):
         """Get lineages for all taxon.
 
@@ -734,14 +734,14 @@ class Taxonomy(object):
         dict : d[taxon] -> lineage
             Lineage information for each taxon.
         """
-        
+
         lineages = defaultdict(set)
         for taxa in taxonomy.values():
             for i, taxon in enumerate(taxa):
                 lineages[taxon] = taxa[0:i]
-            
+
         return lineages
-        
+
     def read_from_tree(self, tree, warnings=True):
         """Obtain the taxonomy for each extant taxa as specified by internal tree labels.
 
@@ -758,9 +758,9 @@ class Taxonomy(object):
 
         if isinstance(tree, str):
             import dendropy
-            tree = dendropy.Tree.get_from_path(tree, 
-                                                schema='newick', 
-                                                rooting="force-rooted", 
+            tree = dendropy.Tree.get_from_path(tree,
+                                                schema='newick',
+                                                rooting="force-rooted",
                                                 preserve_underscores=True)
 
         taxonomy = {}
@@ -777,13 +777,13 @@ class Taxonomy(object):
                     if not is_float(taxa_str):
                         if taxa_str[-1] == ';':
                             taxa_str = taxa_str[:-1]
-                            
+
                         # check for concatenated ranks of the form: p__Crenarchaeota__c__Thermoprotei
                         for prefix in Taxonomy.rank_prefixes:
                             split_str = '__' + prefix
                             if split_str in taxa_str:
                                 taxa_str = taxa_str.replace(split_str, ';' + prefix)
-                                
+
                         # appears to be an internal label and not simply a support value
                         taxa = [x.strip() for x in taxa_str.split(';')] + taxa
                 node = node.parent_node
@@ -822,7 +822,7 @@ class Taxonomy(object):
         dict : d[unique_id] -> [d__<taxon>, ..., s__<taxon>]
             Taxa indexed by unique ids.
         """
-        
+
         check_file_exists(taxonomy_file)
 
         try:
@@ -830,10 +830,10 @@ class Taxonomy(object):
             for row, line in enumerate(open(taxonomy_file)):
                 line_split = line.split('\t')
                 unique_id = line_split[0]
-                
+
                 if use_canonical_gid:
                     unique_id = canonical_gid(unique_id)
-                
+
                 tax_str = line_split[1].rstrip()
                 if tax_str[-1] == ';':
                     # remove trailing semicolons which sometimes
@@ -862,7 +862,7 @@ class Taxonomy(object):
         for genome_id, taxa in taxonomy.items():
             fout.write(genome_id + '\t' + ';'.join(taxa) + '\n')
         fout.close()
-        
+
     def sort_taxa(self, taxa, reverse=False):
         """Sort taxa by rank and then alphabetically.
 
@@ -870,23 +870,23 @@ class Taxonomy(object):
         ----------
         taxa_list : iterable
             Taxa with rank prefixes.
-        
+
         Returns
         -------
         list
             Taxa sorted by rank and alphabetically within each rank.
         """
-        
+
         ordered_taxa = []
         for rank_prefix in Taxonomy.rank_prefixes:
             rank_taxa = []
             for taxon in taxa:
                 if taxon.startswith(rank_prefix):
                     rank_taxa.append(taxon)
-                    
+
             ordered_taxa.extend(sorted(rank_taxa))
-            
+
         if reverse:
             ordered_taxa = ordered_taxa[::-1]
-            
+
         return ordered_taxa

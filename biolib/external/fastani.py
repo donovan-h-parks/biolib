@@ -37,21 +37,21 @@ class FastANI(object):
 
     def __init__(self, ani_cache_file, cpus):
         """Initialization."""
-        
+
         check_dependencies(['fastANI'])
-        
+
         self.cpus = cpus
 
         self.logger = logging.getLogger('timestamp')
-        
+
         self.ani_cache_file = ani_cache_file
         self._read_cache()
-        
+
         self.logger.info('Using FastANI v{}.'.format(self._get_version()))
 
     def _get_version(self):
         """Returns the version of FastANI on the system path.
-        
+
         Returns
         -------
         str
@@ -63,16 +63,16 @@ class FastANI(object):
             stdout, stderr = proc.communicate()
             if stderr.startswith('Unknown option:'):
                 return 'unknown (<1.3)'
-                
+
             version = re.search(r'version (.+)', stderr)
             return version.group(1)
         except Exception as e:
             print(e)
             return 'unknown'
-        
+
     def _read_cache(self):
         """Read previously calculated ANI values."""
-        
+
         self.ani_cache = defaultdict(lambda: {})
 
         if self.ani_cache_file:
@@ -86,14 +86,14 @@ class FastANI(object):
                     af = float(line_split[3])
                     self.ani_cache[gid1][gid2] = (ani, af)
                     cache_size += 1
-                    
+
                 self.logger.info(f'Read ANI cache with {cache_size:,} entries.')
             else:
                 self.logger.warning(f'ANI cache file does not exist: {self.ani_cache_file}')
-            
+
     def write_cache(self, silence=False):
         """Write cache to file."""
-        
+
         if self.ani_cache_file:
             fout = open(self.ani_cache_file, 'w')
             cache_size = 0
@@ -103,13 +103,13 @@ class FastANI(object):
                     fout.write('%s\t%s\t%f\t%f\n' % (gid1, gid2, ani, af))
                     cache_size += 1
             fout.close()
-            
+
             if not silence:
                 self.logger.info(f'Wrote ANI cache with {cache_size:,} entries.')
 
     def _get_genome_id(self, genome_path):
         """Extract genome ID from path to genomic file."""
-        
+
         genome_id = ntpath.basename(genome_path)
         if genome_id.startswith('GCA_') or genome_id.startswith('GCF_'):
             genome_id = '_'.join(genome_id.split('_')[0:2])
@@ -119,9 +119,9 @@ class FastANI(object):
                 genome_id = 'RS_' + genome_id
         else:
             genome_id = '_'.join(genome_id.split('_')[0:2])
-            
+
         return canonical_gid(genome_id)
-        
+
     def fastani(self, qid, rid, q_gf, r_gf):
         """CalculateANI between a pair of genomes."""
 
@@ -131,14 +131,14 @@ class FastANI(object):
                 ani, af = self.ani_cache[qid][rid]
                 ani_af = (qid, rid, ani, af)
                 return ani_af
-        
+
         # create file pointing to representative genome files
         tmp_fastani_file = os.path.join(tempfile.gettempdir(), str(uuid.uuid4()))
         cmd = 'fastANI -q %s -r %s -o %s 2> /dev/null' % (
-                    q_gf, 
-                    r_gf, 
-                    tmp_fastani_file)
-            
+            q_gf,
+            r_gf,
+            tmp_fastani_file)
+
         run(cmd)
 
         if os.path.exists(tmp_fastani_file) and os.stat(tmp_fastani_file).st_size > 0:
@@ -163,15 +163,15 @@ class FastANI(object):
             if qid == None:
                 break
 
-            ani_af = self.fastani(qid, rid, 
-                                    genomic_files[qid], 
-                                    genomic_files[rid])
+            ani_af = self.fastani(qid, rid,
+                                  genomic_files[qid],
+                                  genomic_files[rid])
 
             queue_out.put(ani_af)
 
     def __fastani_writer(self, all_ani_af, num_pairs, report_progress, queue_writer):
         """Store or write results of worker threads in a single thread."""
-        
+
         full_results = {}
         processed = 0
         while True:
@@ -184,35 +184,35 @@ class FastANI(object):
             qid, rid, ani, af = ani_af
             if qid not in full_results:
                 full_results[qid] = {}
-                
+
             full_results[qid][rid] = (ani, af)
-            
+
             if report_progress:
                 processed += 1
                 statusStr = '-> Processing {:,} of {:,} ({:.2f}%) genome pairs.'.format(
-                                    processed, 
-                                    num_pairs, 
-                                    float(processed*100)/num_pairs).ljust(86)
+                    processed,
+                    num_pairs,
+                    float(processed*100)/num_pairs).ljust(86)
                 sys.stdout.write('%s\r' % statusStr)
                 sys.stdout.flush()
-                
+
         if report_progress:
             sys.stdout.write('\n')
-            
-    def pairwise(self, gids, genome_files, check_cache=False):
+
+    def pairwise(self, gids, genome_files, report_progress=True, check_cache=False):
         """Calculate FastANI between all genome pairs in parallel."""
-        
+
         if not gids:
             return {}
-            
+
        # check if all pairs are in cache
         if check_cache:
             ani_af = defaultdict(lambda: {})
-            
+
             in_cache = True
             for qid, rid in permutations(gids, 2):
                 if qid in self.ani_cache:
-                    if rid in self.ani_cache:
+                    if rid in self.ani_cache[qid]:
                         ani_af[qid][rid] = self.ani_cache[qid][rid]
                     else:
                         in_cache = False
@@ -220,47 +220,50 @@ class FastANI(object):
                 else:
                     in_cache = False
                     break
-                    
+
             if in_cache:
                 return ani_af
-            
+
         # calculate required ANI pairs
-        if len(gids) == 2: # skip overhead of setting up queues and processes
+        if len(gids) == 2:  # skip overhead of setting up queues and processes
             d = {}
             gids = list(gids)
             d[gids[0]] = {}
             d[gids[1]] = {}
-            
+
             qid, rid, ani, af = self.fastani(gids[0], gids[1],
-                                                genome_files[gids[0]],
-                                                genome_files[gids[1]])
+                                             genome_files[gids[0]],
+                                             genome_files[gids[1]])
             d[qid][rid] = (ani, af)
             self.ani_cache[qid][rid] = (ani, af)
-            
+
             qid, rid, ani, af = self.fastani(gids[1], gids[0],
-                                                genome_files[gids[1]],
-                                                genome_files[gids[0]])
+                                             genome_files[gids[1]],
+                                             genome_files[gids[0]])
             d[qid][rid] = (ani, af)
             self.ani_cache[qid][rid] = (ani, af)
 
             return d
-        
+
         ani_af = mp.Manager().dict()
-        
+
         worker_queue = mp.Queue()
         writer_queue = mp.Queue()
-        
+
+        num_pairs = 0
         for gid1, gid2 in permutations(gids, 2):
             worker_queue.put((gid1, gid2))
+            num_pairs += 1
 
         for _ in range(self.cpus):
             worker_queue.put((None, None))
 
         try:
-            workerProc = [mp.Process(target = self.__fastani_worker, args = (genome_files,
-                                                                                worker_queue, 
-                                                                                writer_queue)) for _ in range(self.cpus)]
-            writeProc = mp.Process(target = self.__fastani_writer, args = (ani_af, 0, False, writer_queue))
+            workerProc = [mp.Process(target=self.__fastani_worker, args=(genome_files,
+                                                                         worker_queue,
+                                                                         writer_queue)) for _ in range(self.cpus)]
+            writeProc = mp.Process(target=self.__fastani_writer, args=(
+                ani_af, num_pairs, report_progress, writer_queue))
 
             writeProc.start()
 
@@ -276,24 +279,24 @@ class FastANI(object):
             for p in workerProc:
                 p.terminate()
             writeProc.terminate()
-        
+
         ani_af = dict(ani_af)
         for qid in ani_af:
             for rid in ani_af[qid]:
                 self.ani_cache[qid][rid] = ani_af[qid][rid]
-        
+
         return ani_af
-        
+
     def pairs(self, gid_pairs, genome_files, report_progress=True, check_cache=False):
         """Calculate FastANI between specified genome pairs in parallel."""
-        
+
         if not gid_pairs:
             return {}
-            
+
         # check if all pairs are in cache
         if check_cache:
             ani_af = defaultdict(lambda: {})
-            
+
             in_cache = True
             for qid, rid in gid_pairs:
                 if qid in self.ani_cache:
@@ -305,26 +308,26 @@ class FastANI(object):
                 else:
                     in_cache = False
                     break
-                    
+
             if in_cache:
                 return ani_af
 
         # calculate required ANI pairs
-        if len(gid_pairs) <= 6: # skip overhead of setting up queues and processes
+        if len(gid_pairs) <= 6:  # skip overhead of setting up queues and processes
             d = defaultdict(lambda: {})
             for qid, rid in gid_pairs:
-                qid, rid, ani, af = self.fastani(qid, rid, 
-                                                    genome_files[qid],
-                                                    genome_files[rid])
+                qid, rid, ani, af = self.fastani(qid, rid,
+                                                 genome_files[qid],
+                                                 genome_files[rid])
                 d[qid][rid] = (ani, af)
                 self.ani_cache[qid][rid] = (ani, af)
             return d
-        
+
         ani_af = mp.Manager().dict()
-        
+
         worker_queue = mp.Queue()
         writer_queue = mp.Queue()
-        
+
         for gid1, gid2 in gid_pairs:
             worker_queue.put((gid1, gid2))
 
@@ -332,10 +335,11 @@ class FastANI(object):
             worker_queue.put((None, None))
 
         try:
-            workerProc = [mp.Process(target = self.__fastani_worker, args = (genome_files,
-                                                                                worker_queue, 
-                                                                                writer_queue)) for _ in range(self.cpus)]
-            writeProc = mp.Process(target = self.__fastani_writer, args = (ani_af, len(gid_pairs), report_progress, writer_queue))
+            workerProc = [mp.Process(target=self.__fastani_worker, args=(genome_files,
+                                                                         worker_queue,
+                                                                         writer_queue)) for _ in range(self.cpus)]
+            writeProc = mp.Process(target=self.__fastani_writer, args=(
+                ani_af, len(gid_pairs), report_progress, writer_queue))
 
             writeProc.start()
 
@@ -351,76 +355,76 @@ class FastANI(object):
             for p in workerProc:
                 p.terminate()
             writeProc.terminate()
-        
+
         ani_af = dict(ani_af)
         for qid in ani_af:
             for rid in ani_af[qid]:
                 self.ani_cache[qid][rid] = ani_af[qid][rid]
-        
+
         return ani_af
 
     def symmetric_ani(self, ani_af, gid1, gid2):
         """Calculate symmetric ANI statistics between genomes."""
-        
+
         if gid1 == gid2:
             return 100.0, 1.0
-        
+
         if (gid1 not in ani_af
-            or gid2 not in ani_af 
+            or gid2 not in ani_af
             or gid1 not in ani_af[gid2]
-            or gid2 not in ani_af[gid1]):
+                or gid2 not in ani_af[gid1]):
             return 0.0, 0.0
-        
+
         cur_ani, cur_af = ani_af[gid1][gid2]
         rev_ani, rev_af = ani_af[gid2][gid1]
-        
+
         # ANI should be the larger of the two values as this
         # is the most conservative circumscription and reduces the
         # change of creating polyphyletic species clusters
         ani = max(rev_ani, cur_ani)
-        
-        # AF should be the larger of the two values in order to 
+
+        # AF should be the larger of the two values in order to
         # accomodate incomplete and contaminated genomes
         af = max(rev_af, cur_af)
-        
+
         return ani, af
-        
+
     def mean_ani(self, ani_af, gid1, gid2):
         """Calculate mean ANI statistics between genomes."""
-        
+
         if gid1 == gid2:
             return 100.0, 1.0
-        
+
         if (gid1 not in ani_af
-            or gid2 not in ani_af 
+            or gid2 not in ani_af
             or gid1 not in ani_af[gid2]
-            or gid2 not in ani_af[gid1]):
+                or gid2 not in ani_af[gid1]):
             return 0.0, 0.0
-        
+
         cur_ani, cur_af = ani_af[gid1][gid2]
         rev_ani, rev_af = ani_af[gid2][gid1]
-        
+
         ani = (rev_ani + cur_ani) / 2
         af = (rev_af + cur_af) / 2
-        
+
         return ani, af
-    
+
     def symmetric_ani_cached(self, gid1, gid2, genome_file1, genome_file2):
         """Calculate symmetric ANI and AF between two genomes."""
-        
+
         ani_af12 = self.fastani(gid1, gid2, genome_file1, genome_file2)
         ani_af21 = self.fastani(gid2, gid1, genome_file2, genome_file1)
 
         self.ani_cache[gid1][gid2] = ani_af12[2:]
         self.ani_cache[gid2][gid1] = ani_af21[2:]
-        
+
         return self.symmetric_ani(self.ani_cache, gid1, gid2)
 
     def write_full_matrix(self, output_file, ani_af, rid_to_sp, write_ani):
         """Write full matrix with ANI or AF results."""
-        
+
         if rid_to_sp:
-            sp_to_rid = {sp:rid for rid, sp in rid_to_sp.items()}
+            sp_to_rid = {sp: rid for rid, sp in rid_to_sp.items()}
         else:
             # no species mapping given so just map IDs to themselves
             sp_to_rid = {}
@@ -428,9 +432,9 @@ class FastANI(object):
                 sp_to_rid[gid1] = gid1
                 for gid2 in ani_af[gid1]:
                     sp_to_rid[gid2] = gid2
-            
+
         sp_sorted = sorted(sp_to_rid)
-        
+
         fout = open(output_file, 'w')
         fout.write('\t{}\n'.format('\t'.join(sp_sorted)))
         for sp1 in sp_sorted:
@@ -439,7 +443,7 @@ class FastANI(object):
 
             for sp2 in sp_sorted:
                 rid2 = sp_to_rid[sp2]
-                
+
                 if rid1 == rid2:
                     if write_ani:
                         v = 100
@@ -451,17 +455,17 @@ class FastANI(object):
                         v = ani
                     else:
                         v = af
-                    
+
                 fout.write('\t{}'.format(v))
             fout.write('\n')
         fout.close()
-        
+
     def write_ani_matrix(self, output_file, ani_af, rid_to_sp=None):
         """Write full matrix with ANI results."""
-        
+
         self.write_full_matrix(output_file, ani_af, rid_to_sp, write_ani=True)
-        
+
     def write_af_matrix(self, output_file, ani_af, rid_to_sp=None):
         """Write full matrix with AF results."""
-        
+
         self.write_full_matrix(output_file, ani_af, rid_to_sp, write_ani=False)

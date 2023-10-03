@@ -147,11 +147,15 @@ class AbstractPlot(FigureCanvas):
             a.tick1On = True
             a.tick2On = False
 
-        for line in axis.yaxis.get_ticklines():
+        for line in axis.yaxis.get_ticklines(minor=True):
             line.set_color(self.axes_colour)
+            line.set_markeredgecolor(self.axes_colour)
+            line.set_markerfacecolor(self.axes_color)
 
-        for line in axis.xaxis.get_ticklines():
+        for line in axis.xaxis.get_ticklines(minor=True):
             line.set_color(self.axes_colour)
+            line.set_markeredgecolor(self.axes_colour)
+            line.set_markerfacecolor(self.axes_color)
 
         for loc, spine in axis.spines.items():
             if loc in ['right', 'top']:
